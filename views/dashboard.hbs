@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GOMARP</title>
+</head>
+<body>
+    <!-- load header from partials -->
+    {{> 'partials/header' }}
+    <h1>{{loginMessage}}</h1>
+    <h1>Dashboard</h1>
+    
+    <a href="/inventory">Inventory</a>
+    <a href="/sales">Sales</a>
+    <a href="/purchasing">Purchasing</a>
+    <a href="/manufacturing">Manufacturing</a>
+    
+
+    {{> 'partials/footer' }}
+    {{> 'partials/js-resetpath' }}
+</body>
+</html>

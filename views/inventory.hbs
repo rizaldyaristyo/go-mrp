@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory</title>
+</head>
+<style>
+    main {
+        margin: 1%;
+    }
+</style>
+<body>
+    <!-- load header from partials -->
+    {{> 'partials/header' }}
+    <main>
+        <h1>Inventory Dashboard</h1>
+        <h3>Level: {{permission_val}}</h3>
+        <a href="/dashboard">Back to Dashboard</a>
+        {{!-- <section id="stock-forecast">
+            <canvas id="stock-forecast-chart" class="charts"></canvas>
+        </section> --}}
+        <section id="inventory-list">
+            <div style="overflow-x:auto">
+                <input type="text" id="search-bar" onkeyup="searchInventory()" placeholder="Search for names..">
+                <table class="table" id="inventoryTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">Item Name</th>
+                            <th scope="col">Vendor Name</th>
+                            <th scope="col">Item Code</th>
+                            <th scope="col">Item Type</th>
+                            <th scope="col">Sellable</th>
+                            <th scope="col">Purchasable</th>
+                            <th scope="col">Manufacturable</th>
+                            <th scope="col">Price</th>
+                            <th scope="col">Currency</th>
+                            <th scope="col">Quantity</th>
+                            <th scope="col">Qty. Warning</th>
+                            <th scope="col">Demand</th>
+                            <th scope="col">Last Updated</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="12" class="text-center"><i>No Data</i></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <div id="hiddenModals"></div>
+            <div id="toastArea"></div>
+        </section>
+    </main>
+    {{> 'partials/footer' }}
+</body>
+</html>
+<script>
+    // API Output Example
+    /*
+        [
+            {
+                "product_id": 1,
+                "item_name": "Bottle Cap",
+                "vendor_id": 1,
+                "vendor_name": "ABC Corporation",
+                "vendor_address": "Jl. ABC No. 123",
+                "tax_id": "123456789",
+                "item_code": "CAP001",
+                "item_code_2": "CAP-A",
+                "item_type": "Raw Material",
+                "sellable": false,
+                "purchaseable": true,
+                "manufacturable": true,
+                "price": 10,
+                "price_2": 0,
+                "currency": "",
+                "quantity": 0,
+                "minimum_stock_warning": 0,
+                "last_updated": "0001-01-01T07:00:00+07:00",
+                "archived": false
+            }
+        ]
+    */
+    function updateTable() {
+        var inventoryTableBody = document.querySelector('#inventoryTable tbody');
+        var hiddenModals = document.querySelector('#hiddenModals');
+        fetch('/api/getinventory', { method: 'POST' })
+            .then((res) => res.json())
+            .then((data) => {
+                inventoryTableBody.innerHTML = '';
+                data.forEach((inventory, index) => {
+                    var row = document.createElement('tr');
+                    row.setAttribute('class', 'search-target');
+                    row.innerHTML = `
+                        <td>${inventory['item_name']}</td>
+                        <td>${inventory['vendor_name']}</td>
+                        <td>${inventory['item_code']}</td>
+                        <td>${inventory['item_type']['String']}</td>
+                        <td>${inventory['sellable'] != true ? '❌' : '⭕️'}</td>
+                        <td>${inventory['purchaseable'] != true ? '❌' : '⭕️'}</td>
+                        <td>${inventory['manufacturable'] != true ? '❌' : '⭕️'}</td>
+                        <td>${inventory['price']}</td>
+                        <td>${inventory['currency']['String']}</td>
+                        <td>${inventory['quantity']}</td>
+                        <td ${inventory['quantity'] < inventory['minimum_stock_warning'] ? 'class="text-danger"' : ''}>${inventory['minimum_stock_warning'] > inventory['quantity'] ? '⚠️' : ''} ${inventory['minimum_stock_warning']}</td>
+                        <td ${inventory['quantity'] < inventory['total_demand_quantity']['Int64'] ? 'class="text-danger"' : ''}>${inventory['total_demand_quantity']['Int64'] > inventory['quantity'] ? '⚠️' : ''} ${inventory['total_demand_quantity']['Int64']}</td>
+                        <td>${inventory['last_updated']}</td>
+                        <td><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-replenish-${inventory['product_id']}">Replenish</button></td>
+                        <td style="display: none">${inventory['product_id']}</td>
+                    `;
+                    inventoryTableBody.appendChild(row);
+
+                    hiddenModals.innerHTML += `
+                        <div class="modal fade" id="modal-replenish-${inventory['product_id']}" tabindex="-1" role="dialog" aria-labelledby="modal-replenish-${inventory['product_id']}Label" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="modal-header-replenish-${inventory['product_id']}Label">Replenish Inventory</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form action="/api/ReplenishInventory/${inventory['product_id']}" method="POST">
+                                            <div class="mb-3">
+                                                <label for="replenish-quantity-${inventory['product_id']}" class="form-label">Quantity</label>
+                                                <input type="number" class="form-control" id="replenish-quantity-${inventory['product_id']}" name="replenish-quantity" value="${inventory['total_demand_quantity']['Int64']-inventory['quantity'] >= 0 ? inventory['total_demand_quantity']['Int64']-inventory['quantity'] : 0}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="replenish-manufacture-or-purchase-radio" class="form-label">Order</label>
+                                                <input class="form-check-input" type="radio" name="replenish-manufacture-or-purchase-radio" id="replenish-manufacture-radio-${inventory['product_id']}" value="manufacture" ${inventory['manufacturable'] != true ? 'disabled' : 'checked'}>
+                                                <label class="form-check-label" for="replenish-manufacture-radio-${inventory['product_id']}">
+                                                    Manufacture
+                                                </label>
+                                                <input class="form-check-input" type="radio" name="replenish-manufacture-or-purchase-radio" id="replenish-purchase-radio-${inventory['product_id']}" value="purchase" ${inventory['purchaseable'] != true ? 'disabled' : 'checked'}>
+                                                <label class="form-check-label" for="replenish-purchase-radio-${inventory['product_id']}">
+                                                    Purchase
+                                                </label>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="replenish-order-number-${inventory['product_id']}" class="form-label">Manufacture/Purchase Order Number</label>
+                                                <input type="text" class="form-control" id="replenish-order-number-${inventory['product_id']}" name="replenish-order-number" required>
+                                            </div>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <input type="submit" class="btn btn-primary" value="Order">
+                                        </form> 
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+    }
+
+    function searchInventory() {
+        var input, filter, table, tr, td, i, txtValue;
+        input = document.getElementById("search-bar");
+        filter = input.value.toUpperCase();
+        table = document.getElementById("inventoryTable");
+        tr = table.getElementsByTagName("tr");
+        for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[0];
+            if (td) {
+            txtValue = td.textContent || td.innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+            }       
+        }
+    }
+
+    updateTable();
+
+    const toastArea = document.getElementById('toastArea');
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('replenish-success') == 'true') {
+        if (urlParams.get('replenish-type') == 'manufacture') {
+            toastArea.innerHTML += `
+            <div class="toast position-fixed bottom-0 start-0 p-1" style="margin: 25px" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-body">
+                    Manufacture Order successful!
+                    <div class="mt-2 pt-2 border-top">
+                        <button type="button" class="btn btn-primary btn-sm">Go to</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">Close</button>
+                    </div>
+                </div>
+            </div>
+            `;
+        } else if (urlParams.get('replenish-type') == 'purchase') {
+            toastArea.innerHTML += `
+            <div class="toast position-fixed bottom-0 start-0 p-1" style="margin: 25px" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-body">
+                    Purchase Order successful!
+                    <div class="mt-2 pt-2 border-top">
+                        <button type="button" class="btn btn-primary btn-sm">Go to</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">Close</button>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        {{!-- Show toast --}}
+        window.onload = (event) => {
+            var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+            var toastList = toastElList.map(function (toastEl) {
+                return new bootstrap.Toast(toastEl)
+            })
+            toastList.forEach(toast => {
+                toast.show()
+            })
+        }
+    }
+</script>
+{{> 'partials/js-resetpath' }}

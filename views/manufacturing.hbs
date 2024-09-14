@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manufacturing</title>
+</head>
+<style>
+    main {
+        margin: 1%;
+    }
+</style>
+<body>
+    <!-- load header from partials -->
+    {{> 'partials/header' }}
+    <main>
+        <h1>Manufacturing Dashboard</h1>
+        <h3>Level: {{permission_val}}</h3>
+        <a href="/dashboard">Back to Dashboard</a>
+        {{!-- <section id="stock-forecast">
+            <canvas id="stock-forecast-chart" class="charts"></canvas>
+        </section> --}}
+        <section id="manufacturing-list">
+            <div style="overflow-x:auto">
+                <input type="text" id="search-bar" onkeyup="searchManufacturing()" placeholder="Search for names..">
+                <table class="table" id="manufacturingOrdersTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">Manufacture Order</th>
+                            <th scope="col">Product Name</th>
+                            <th scope="col">Quantity</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Order Date</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="12" class="text-center"><i>No Data</i></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <div id="hiddenModals"></div>
+            <div id="toastArea"></div>
+        </section>
+    </main>
+    {{> 'partials/footer' }}
+</body>
+</html>
+<script>
+
+    {{!-- /*
+        API Output Example
+        [
+            {
+                "order_id": 1,
+                "item_name": "Bottle Cap",
+                "vendor_id": 1,
+                "vendor_name": "ABC Corporation",
+                "vendor_address": "Jl. ABC No. 123",
+                "tax_id": "123456789",
+                "item_code": "CAP001",
+                "item_code_2": "CAP-A",
+                "item_type": "Raw Material",
+                "sellable": false,
+                "purchaseable": true,
+                "manufacturable": true,
+                "price": 10,
+                "price_2": 0,
+                "currency": "",
+                "quantity": 0,
+                "minimum_stock_warning": 0,
+                "last_updated": "0001-01-01T07:00:00+07:00",
+                "archived": false
+            }
+        ]
+    */ --}}
+    
+    function updateTable() {
+        const permission_int = {{permission_int}};
+        const manufacturingOrdersTableBody = document.querySelector('#manufacturingOrdersTable tbody');
+        const hiddenModals = document.querySelector('#hiddenModals');
+        fetch('/api/GetManufacturingOrder', { method: 'POST' })
+            .then((res) => res.json())
+            .then((data) => {
+                manufacturingOrdersTableBody.innerHTML = '';
+                data.forEach((manufacturing, index) => {
+                    const row = document.createElement('tr');
+                    row.setAttribute('class', 'search-target');
+                    row.innerHTML = `
+                        <td>${manufacturing['manufacture_order_number']}</td>
+                        <td>${manufacturing['product_name']}</td>
+                        <td>${manufacturing['quantity_to_manufacture']}</td>
+                        <td>${manufacturing['status']}</td>
+                        <td>${manufacturing['created_at']['Time']}</td>
+                        <td>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-manufacturing-order-${manufacturing['order_id']}" ${permission_int < 3 ? 'disabled' : ''}>Approval</button>
+                            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancel-manufacturing-order-${manufacturing['order_id']}" ${permission_int < 3 ? 'disabled' : ''}>Cancel Order</button>
+                        </td>
+                    `;
+                    manufacturingOrdersTableBody.appendChild(row);
+
+                    hiddenModals.innerHTML += `
+                        <div class="modal fade" id="modal-manufacturing-order-${manufacturing['order_id']}" tabindex="-1" role="dialog" aria-labelledby="modal-manufacturing-order-${manufacturing['order_id']}Label" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="modal-header-manufacturing-order-${manufacturing['order_id']}Label">Manufacture Order Approval</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form id="manufacturing-form-${manufacturing['order_id']}" action="/api/ApproveManufacturingOrder/${manufacturing['order_id']}" method="POST"></form>
+                                        <div class="mb-3">
+                                            <b>Product to Manufacture:</b> ${manufacturing['product_name']} <br>
+                                            <b>Quantity to Manufacture:</b> ${manufacturing['quantity_to_manufacture']} <br>
+                                            <b>Order Date:</b> ${manufacturing['created_at']['Time']} <br>
+                                            <b>Status:</b> ${manufacturing['status']} <br>
+                                        </div>
+                                        <div class="mb-3">
+                                            Recipes:<br>
+                                            ${
+                                                manufacturing['recipes'] == null ? 'No Recipes' : manufacturing['recipes'].map((recipe) => `- ${
+                                                    recipe['material_name']
+                                                } x ${
+                                                    recipe['total_material_quantity_needed']
+                                                } ${
+                                                    recipe['material_current_quantity'] < recipe['total_material_quantity_needed'] ? '⚠️<a href="/inventory" style="text-decoration:none;">Check Inventory!</a>' : ''
+                                                }<br>`).join('')
+                                            }
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmation-modal-${manufacturing['order_id']}" ${(permission_int < 3) || (manufacturing['recipes'] == null 
+                                                                                                                                                                                    ? false 
+                                                                                                                                                                                    : manufacturing['recipes'].map(
+                                                                                                                                                                                            (recipe) => recipe['material_current_quantity'] < recipe['total_material_quantity_needed']
+                                                                                                                                                                                        ).includes(true))
+                                                                                                                                                                                            ? 'disabled'
+                                                                                                                                                                                            : ''}>Approve Order</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{!-- confirmation modal --}}
+                        <div class="modal fade" id="confirmation-modal-${manufacturing['order_id']}" tabindex="-1" aria-labelledby="confirmation-modal-${manufacturing['order_id']}Label" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="confirmation-modal-${manufacturing['order_id']}Label">Confirmation</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to <b>APPROVE</b> this order?</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                                        <button type="button" onclick='confirmSubmitForm("manufacturing-form-${manufacturing['order_id']}")' class="btn btn-primary" ${permission_int < 3 ? 'disabled' : ''}>Yes, I Want to Approve the Order</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{!-- cancel order modal --}}
+                        <div class="modal fade" id="cancel-manufacturing-order-${manufacturing['order_id']}" tabindex="-1" aria-labelledby="cancel-manufacturing-order-${manufacturing['order_id']}Label" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-danger">
+                                        <h1 class="modal-title fs-5 text-white" id="cancel-manufacturing-order-${manufacturing['order_id']}Label">Confirmation</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to <b>CANCEL</b> this order?</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <form id="cancel-manufacturing-form-${manufacturing['order_id']}" action="/api/CancelManufacturingOrder/${manufacturing['order_id']}" method="POST"></form>
+                                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
+                                        <button type="button" onclick='confirmSubmitForm("cancel-manufacturing-form-${manufacturing['order_id']}")' class="btn btn-danger">Yes, I Want to Cancel the Order</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+    }
+
+    function searchManufacturing() {
+        var input, filter, table, tr, td, i, txtValue;
+        input = document.getElementById("search-bar");
+        filter = input.value.toUpperCase();
+        table = document.getElementById("manufacturingOrdersTable");
+        tr = table.getElementsByTagName("tr");
+        for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[0];
+            if (td) {
+            txtValue = td.textContent || td.innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+            }       
+        }
+    }
+
+    updateTable();
+
+    const toastArea = document.getElementById('toastArea');
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('manufacturing-order-success') == 'true') {
+        if (urlParams.get('manufacturing-order-type') == 'manufacture') {
+            toastArea.innerHTML += `
+            <div class="toast position-fixed bottom-0 start-0 p-1" style="margin: 25px" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-body">
+                    Manufacture Order successful!
+                    <div class="mt-2 pt-2 border-top">
+                        <button type="button" class="btn btn-primary btn-sm">Go to</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">Close</button>
+                    </div>
+                </div>
+            </div>
+            `;
+        } else if (urlParams.get('manufacturing-order-type') == 'purchase') {
+            toastArea.innerHTML += `
+            <div class="toast position-fixed bottom-0 start-0 p-1" style="margin: 25px" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-body">
+                    Purchase Order successful!
+                    <div class="mt-2 pt-2 border-top">
+                        <button type="button" class="btn btn-primary btn-sm">Go to</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">Close</button>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        // Show toast
+        window.onload = (event) => {
+            var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+            var toastList = toastElList.map(function (toastEl) {
+                return new bootstrap.Toast(toastEl)
+            })
+            toastList.forEach(toast => {
+                toast.show()
+            })
+        }
+    }
+    function confirmSubmitForm(formID) {
+        document.getElementById(formID).submit();
+    }
+</script>
+{{> 'partials/js-resetpath' }}

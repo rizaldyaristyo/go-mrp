@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+</head>
+<body>
+    {{> 'partials/loggedout-header' }}
+    <h3>{{registerMessage}}</h3>
+    <h2>User Registration</h2>
+    <form action="/register" method="POST">
+        <label for="employee_id">Employee ID:</label>
+        <input type="text" id="employee_id" name="employee_id" required>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+
+        <fieldset>
+            <legend>Permissions</legend>
+            
+            <div class="permission-group">
+                <label>Sales Permission:</label>
+                <label><input type="radio" name="sales_permission" value="0"> 0</label>
+                <label><input type="radio" name="sales_permission" value="1"> 1</label>
+                <label><input type="radio" name="sales_permission" value="2"> 2</label>
+                <label><input type="radio" name="sales_permission" value="3"> 3</label>
+                <label><input type="radio" name="sales_permission" value="4"> 4</label>
+            </div>
+
+            <div class="permission-group">
+                <label>Purchasing Permission:</label>
+                <label><input type="radio" name="purchasing_permission" value="0"> 0</label>
+                <label><input type="radio" name="purchasing_permission" value="1"> 1</label>
+                <label><input type="radio" name="purchasing_permission" value="2"> 2</label>
+                <label><input type="radio" name="purchasing_permission" value="3"> 3</label>
+                <label><input type="radio" name="purchasing_permission" value="4"> 4</label>
+            </div>
+
+            <div class="permission-group">
+                <label>Manufacturing Permission:</label>
+                <label><input type="radio" name="manufacturing_permission" value="0"> 0</label>
+                <label><input type="radio" name="manufacturing_permission" value="1"> 1</label>
+                <label><input type="radio" name="manufacturing_permission" value="2"> 2</label>
+                <label><input type="radio" name="manufacturing_permission" value="3"> 3</label>
+                <label><input type="radio" name="manufacturing_permission" value="4"> 4</label>
+            </div>
+
+            <div class="permission-group">
+                <label>Inventory Permission:</label>
+                <label><input type="radio" name="inventory_permission" value="0"> 0</label>
+                <label><input type="radio" name="inventory_permission" value="1"> 1</label>
+                <label><input type="radio" name="inventory_permission" value="2"> 2</label>
+                <label><input type="radio" name="inventory_permission" value="3"> 3</label>
+                <label><input type="radio" name="inventory_permission" value="4"> 4</label>
+            </div>
+
+        </fieldset>
+
+        <button type="submit">Submit</button>
+    </form>
+    {{> 'partials/footer' }}
+</body>
+</html>
