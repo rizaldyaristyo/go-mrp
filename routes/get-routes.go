@@ -18,8 +18,8 @@ func GetRoutes(app *fiber.App) {
     app.Get("/dashboard", middleware.JWTMiddleware, handlers.DashboardHbs)
     
     // Role Specific Routes
-    app.Get("/sales", middleware.JWTMiddleware, middleware.RoleMiddleware, handlers.SalesHbs)
-    app.Get("/purchasing", middleware.JWTMiddleware, middleware.RoleMiddleware, handlers.PurchasingHbs)
-    app.Get("/manufacturing", middleware.JWTMiddleware, middleware.RoleMiddleware, handlers.ManufacturingHbs)
-    app.Get("/inventory", middleware.JWTMiddleware, middleware.RoleMiddleware, handlers.InventoryHbs)
+    app.Get("/sales", middleware.JWTMiddleware, middleware.RoleSalesLevel1Middleware, handlers.SalesHbs)
+    app.Get("/purchasing", middleware.JWTMiddleware, middleware.RolePurchasingLevel1Middleware, handlers.PurchasingHbs)
+    app.Get("/manufacturing", middleware.JWTMiddleware, middleware.RoleManufacturingLevel1Middleware, handlers.ManufacturingHbs)
+    app.Get("/inventory", middleware.JWTMiddleware, middleware.RoleInventoryLevel1Middleware, handlers.InventoryHbs)
 }

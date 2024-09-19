@@ -63,7 +63,7 @@
     /*
         [
             {
-                "product_id": 1,
+                "inventory_id": 1,
                 "item_name": "Bottle Cap",
                 "vendor_id": 1,
                 "vendor_name": "ABC Corporation",
@@ -85,11 +85,15 @@
             }
         ]
     */
-    function updateTable() {
+
+    async function updateTable() {
+        const vendorResponse = await fetch('/api/GetVendors', { method: 'POST' });
+        vendors = await vendorResponse.json();
         var inventoryTableBody = document.querySelector('#inventoryTable tbody');
         var hiddenModals = document.querySelector('#hiddenModals');
+        const permission_int = {{permission_int}};
         fetch('/api/getinventory', { method: 'POST' })
-            .then((res) => res.json())
+            .then((res) => res.json())  
             .then((data) => {
                 inventoryTableBody.innerHTML = '';
                 data.forEach((inventory, index) => {
@@ -109,39 +113,46 @@
                         <td ${inventory['quantity'] < inventory['minimum_stock_warning'] ? 'class="text-danger"' : ''}>${inventory['minimum_stock_warning'] > inventory['quantity'] ? '⚠️' : ''} ${inventory['minimum_stock_warning']}</td>
                         <td ${inventory['quantity'] < inventory['total_demand_quantity']['Int64'] ? 'class="text-danger"' : ''}>${inventory['total_demand_quantity']['Int64'] > inventory['quantity'] ? '⚠️' : ''} ${inventory['total_demand_quantity']['Int64']}</td>
                         <td>${inventory['last_updated']}</td>
-                        <td><button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-replenish-${inventory['product_id']}">Replenish</button></td>
-                        <td style="display: none">${inventory['product_id']}</td>
+                        <td>
+                            <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#modal-edit-${inventory['inventory_id']}" ${permission_int < 2 ? 'disabled' : ''}>Edit</button>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-replenish-${inventory['inventory_id']}" ${permission_int < 3 ? 'disabled' : ''}>Replenish</button>
+                        </td>
+                        <td style="display: none">${inventory['inventory_id']}</td>
                     `;
                     inventoryTableBody.appendChild(row);
 
                     hiddenModals.innerHTML += `
-                        <div class="modal fade" id="modal-replenish-${inventory['product_id']}" tabindex="-1" role="dialog" aria-labelledby="modal-replenish-${inventory['product_id']}Label" aria-hidden="true">
+                        <div class="modal fade" id="modal-replenish-${inventory['inventory_id']}" tabindex="-1" role="dialog" aria-labelledby="modal-replenish-${inventory['inventory_id']}Label" aria-hidden="true">
                             <div class="modal-dialog">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h1 class="modal-title fs-5" id="modal-header-replenish-${inventory['product_id']}Label">Replenish Inventory</h1>
+                                        <h1 class="modal-title fs-5" id="modal-header-replenish-${inventory['inventory_id']}Label">Replenish Inventory</h1>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <form action="/api/ReplenishInventory/${inventory['product_id']}" method="POST">
+                                        <form action="/api/ReplenishInventory/${inventory['inventory_id']}" method="POST">
                                             <div class="mb-3">
-                                                <label for="replenish-quantity-${inventory['product_id']}" class="form-label">Quantity</label>
-                                                <input type="number" class="form-control" id="replenish-quantity-${inventory['product_id']}" name="replenish-quantity" value="${inventory['total_demand_quantity']['Int64']-inventory['quantity'] >= 0 ? inventory['total_demand_quantity']['Int64']-inventory['quantity'] : 0}" required>
+                                                <span>Item Name</span>
+                                                <h3>${inventory['item_name']}</h3>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="replenish-quantity-${inventory['inventory_id']}" class="form-label">Quantity</label>
+                                                <input type="number" class="form-control" id="replenish-quantity-${inventory['inventory_id']}" name="replenish-quantity" value="${inventory['total_demand_quantity']['Int64']-inventory['quantity'] >= 0 ? inventory['total_demand_quantity']['Int64']-inventory['quantity'] : 0}" required>
                                             </div>
                                             <div class="mb-3">
                                                 <label for="replenish-manufacture-or-purchase-radio" class="form-label">Order</label>
-                                                <input class="form-check-input" type="radio" name="replenish-manufacture-or-purchase-radio" id="replenish-manufacture-radio-${inventory['product_id']}" value="manufacture" ${inventory['manufacturable'] != true ? 'disabled' : 'checked'}>
-                                                <label class="form-check-label" for="replenish-manufacture-radio-${inventory['product_id']}">
+                                                <input class="form-check-input" type="radio" name="replenish-manufacture-or-purchase-radio" id="replenish-manufacture-radio-${inventory['inventory_id']}" value="manufacture" ${inventory['manufacturable'] != true ? 'disabled' : 'checked'}>
+                                                <label class="form-check-label" for="replenish-manufacture-radio-${inventory['inventory_id']}">
                                                     Manufacture
                                                 </label>
-                                                <input class="form-check-input" type="radio" name="replenish-manufacture-or-purchase-radio" id="replenish-purchase-radio-${inventory['product_id']}" value="purchase" ${inventory['purchaseable'] != true ? 'disabled' : 'checked'}>
-                                                <label class="form-check-label" for="replenish-purchase-radio-${inventory['product_id']}">
+                                                <input class="form-check-input" type="radio" name="replenish-manufacture-or-purchase-radio" id="replenish-purchase-radio-${inventory['inventory_id']}" value="purchase" ${inventory['purchaseable'] != true ? 'disabled' : 'checked'}>
+                                                <label class="form-check-label" for="replenish-purchase-radio-${inventory['inventory_id']}">
                                                     Purchase
                                                 </label>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="replenish-order-number-${inventory['product_id']}" class="form-label">Manufacture/Purchase Order Number</label>
-                                                <input type="text" class="form-control" id="replenish-order-number-${inventory['product_id']}" name="replenish-order-number" required>
+                                                <label for="replenish-order-number-${inventory['inventory_id']}" class="form-label">Manufacture/Purchase Order Number</label>
+                                                <input type="text" class="form-control" id="replenish-order-number-${inventory['inventory_id']}" name="replenish-order-number" required>
                                             </div>
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                                             <input type="submit" class="btn btn-primary" value="Order">
@@ -150,7 +161,80 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="modal fade" id="modal-edit-${inventory['inventory_id']}" tabindex="-1" role="dialog" aria-labelledby="modal-edit-${inventory['inventory_id']}Label" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="modal-header-edit-${inventory['inventory_id']}Label">Edit Inventory</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <form action="/api/EditInventory/${inventory['inventory_id']}" method="POST">
+                                            <div class="mb-3">
+                                                <label for="edit-item-name-${inventory['inventory_id']}" class="form-label">Item Name</label>
+                                                <input type="text" class="form-control" id="edit-item-name-${inventory['inventory_id']}" name="edit-item-name" value="${inventory['item_name']}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit-vendor-name-${inventory['inventory_id']}" class="form-label">Vendor</label>
+                                                <select class="form-select" id="edit-vendor-name-${inventory['inventory_id']}" name="edit-vendor-name" required>
+                                                    {{!-- filled by js --}}
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit-item-code-${inventory['inventory_id']}" class="form-label">Item Code</label>
+                                                <input type="text" class="form-control" id="edit-item-code-${inventory['inventory_id']}" name="edit-item-code" value="${inventory['item_code']}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit-item-type-${inventory['inventory_id']}" class="form-label">Item Type</label>
+                                                <select class="form-select" id="edit-item-type-${inventory['inventory_id']}" name="edit-item-type" required>
+                                                    <option value="Product" ${inventory['item_type']['String'] == 'Product' ? 'selected' : ''}>Product</option>
+                                                    <option value="Raw Material" ${inventory['item_type']['String'] == 'Raw Material' ? 'selected' : ''}>Raw Material</option>
+                                                    <option value="Processed Material" ${inventory['item_type']['String'] == 'Processed Material' ? 'selected' : ''}>Processed Material</option>
+                                                    <option value="Consumable" ${inventory['item_type']['String'] == 'Consumable' ? 'selected' : ''}>Consumable</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <input type="checkbox" class="form-check-input" id="edit-sellable-${inventory['inventory_id']}" name="edit-sellable" ${inventory['sellable'] == true ? 'checked' : ''}>
+                                                <label for="edit-sellable-${inventory['inventory_id']}" class="form-label">Sellable</label>&emsp;
+                                                <input type="checkbox" class="form-check-input" id="edit-purchasable-${inventory['inventory_id']}" name="edit-purchasable" ${inventory['purchaseable'] == true ? 'checked' : ''}>
+                                                <label for="edit-purchasable-${inventory['inventory_id']}" class="form-label">Purchasable</label>&emsp;
+                                                <input type="checkbox" class="form-check-input" id="edit-manufacturable-${inventory['inventory_id']}" name="edit-manufacturable" ${inventory['manufacturable'] == true ? 'checked' : ''}>
+                                                <label for="edit-manufacturable-${inventory['inventory_id']}" class="form-label">Manufacturable</label>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit-price-${inventory['inventory_id']}" class="form-label">Price</label>
+                                                <input type="number" class="form-control" id="edit-price-${inventory['inventory_id']}" name="edit-price" value="${inventory['price']}" required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit-currency-${inventory['inventory_id']}" class="form-label">Currency</label>
+                                                <select class="form-select" id="edit-currency-${inventory['inventory_id']}" name="edit-currency" required>
+                                                    <option value="IDR" ${inventory['currency'] == 'IDR' ? 'selected' : ''}>IDR</option>
+                                                    <option value="USD" ${inventory['currency'] == 'USD' ? 'selected' : ''}>USD</option>
+                                                    <option value="EUR" ${inventory['currency'] == 'EUR' ? 'selected' : ''}>EUR</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit-quantity-${inventory['inventory_id']}" class="form-label">Quantity</label>
+                                                <input type="number" class="form-control" id="edit-quantity-${inventory['inventory_id']}" name="edit-quantity" value="${inventory['quantity']}" readonly required>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label for="edit-quantity-warning-${inventory['inventory_id']}" class="form-label">Minimum Stock Warning</label>
+                                                <input type="number" class="form-control" id="edit-quantity-warning-${inventory['inventory_id']}" name="edit-quantity-warning" value="${inventory['minimum_stock_warning']}" required>
+                                            </div>
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <input type="submit" class="btn btn-primary" value="Save Changes">
+                                        </form> 
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     `;
+                    vendors.forEach(vendor => {
+                        const selectElement = document.getElementById('edit-vendor-name-' + inventory['inventory_id']);
+                        let option = document.createElement('option');
+                        option = new Option(text=vendor['vendor_name'], value=vendor['vendor_id'], defaultSelected=(vendor['vendor_name'] != inventory['vendor_name'] ? false : true), selected=true);
+                        selectElement.appendChild(option);
+                    });
                 });
             });
     }
@@ -185,7 +269,7 @@
                 <div class="toast-body">
                     Manufacture Order successful!
                     <div class="mt-2 pt-2 border-top">
-                        <button type="button" class="btn btn-primary btn-sm">Go to</button>
+                        <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/manufacturing'">Go to Manufacturing</button>
                         <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">Close</button>
                     </div>
                 </div>

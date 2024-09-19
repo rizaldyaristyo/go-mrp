@@ -97,8 +97,18 @@
                         <td>${manufacturing['status']}</td>
                         <td>${manufacturing['created_at']['Time']}</td>
                         <td>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-manufacturing-order-${manufacturing['order_id']}" ${permission_int < 3 ? 'disabled' : ''}>Approval</button>
-                            <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancel-manufacturing-order-${manufacturing['order_id']}" ${permission_int < 3 ? 'disabled' : ''}>Cancel Order</button>
+                            ${manufacturing['status'] == 'Pending' ? `
+                                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-manufacturing-order-${manufacturing['order_id']}" ${permission_int < 3 ? 'disabled' : ''}>Approval</button>
+                                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancel-manufacturing-order-${manufacturing['order_id']}" ${permission_int < 3 ? 'disabled' : ''}>Cancel Order</button>
+                            ` : manufacturing['status'] == 'In Progress' ? `
+                                <button class="btn btn-warning" data-bs-toggle="modal" data-bs-target="#receive-manufacturing-order-${manufacturing['order_id']}" ${permission_int < 3 ? 'disabled' : ''}>Receive Order</button>
+                                <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancel-manufacturing-order-${manufacturing['order_id']}" ${permission_int < 3 ? 'disabled' : ''}>Cancel Order</button>
+                            ` : manufacturing['status'] == 'Completed' ? `
+                                <!-- Optionally add content here for Completed status -->
+                            ` : manufacturing['status'] == 'Cancelled' ? `
+                                <!-- Optionally add content here for Cancelled status -->
+                            ` : ''
+                            }
                         </td>
                     `;
                     manufacturingOrdersTableBody.appendChild(row);
@@ -180,6 +190,26 @@
                                         <form id="cancel-manufacturing-form-${manufacturing['order_id']}" action="/api/CancelManufacturingOrder/${manufacturing['order_id']}" method="POST"></form>
                                         <button type="button" class="btn btn-primary" data-bs-dismiss="modal">No</button>
                                         <button type="button" onclick='confirmSubmitForm("cancel-manufacturing-form-${manufacturing['order_id']}")' class="btn btn-danger">Yes, I Want to Cancel the Order</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{!-- receive order modal --}}
+                        <div class="modal fade" id="receive-manufacturing-order-${manufacturing['order_id']}" tabindex="-1" aria-labelledby="receive-manufacturing-order-${manufacturing['order_id']}Label" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-warning">
+                                        <h1 class="modal-title fs-5 text-dark" id="receive-manufacturing-order-${manufacturing['order_id']}Label">Confirmation</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <p>Are you sure you want to <b>RECEIVE</b> this order,<br>and mark this order as <b>COMPLETED</b>?</p>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <form id="receive-manufacturing-form-${manufacturing['order_id']}" action="/api/ReceiveManufacturingOrder/${manufacturing['order_id']}" method="POST"></form>
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+                                        <button type="button" onclick='confirmSubmitForm("receive-manufacturing-form-${manufacturing['order_id']}")' class="btn btn-warning">Yes, I Want to Receive the Order</button>
                                     </div>
                                 </div>
                             </div>

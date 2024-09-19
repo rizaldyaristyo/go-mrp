@@ -53,54 +53,34 @@ func DashboardHbs(c *fiber.Ctx) error {
 	}
 }
 
-func SalesHbs(c *fiber.Ctx) error {	
-	permissionInt := getNthDigit(c.Locals("permission_val").(int), 0)
-
-	if permissionInt > 0 {
-		return c.Render("sales", fiber.Map{
-			"permission_val": permissionIntToString(permissionInt),
-			"permission_int": permissionInt,
-		})
-	}
-
-	return c.Redirect("/dashboard")
+func SalesHbs(c *fiber.Ctx) error {
+	permissionInt := c.Locals("permission_int").(int64)
+	return c.Render("sales", fiber.Map{
+		"permission_val": permissionIntToString(permissionInt),
+		"permission_int": permissionInt,
+	})
 }
 
 func PurchasingHbs(c *fiber.Ctx) error {
-	permissionInt := getNthDigit(c.Locals("permission_val").(int), 1)
-
-	if permissionInt > 0 {
-		return c.Render("purchasing", fiber.Map{
-			"permission_val": permissionIntToString(permissionInt),
-			"permission_int": permissionInt,
-		})
-	}
-
-	return c.Redirect("/dashboard")
+	permissionInt := c.Locals("permission_int").(int64)
+	return c.Render("purchasing", fiber.Map{
+		"permission_val": permissionIntToString(permissionInt),
+		"permission_int": permissionInt,
+	})
 }
 
 func ManufacturingHbs(c *fiber.Ctx) error {
-	permissionInt := getNthDigit(c.Locals("permission_val").(int), 2)
-
-	if permissionInt > 0 {
-		return c.Render("manufacturing", fiber.Map{
-			"permission_val": permissionIntToString(permissionInt),
-			"permission_int": permissionInt,
-		})
-	}
-
-	return c.Redirect("/dashboard")
+	permissionInt := c.Locals("permission_int").(int64)
+	return c.Render("manufacturing", fiber.Map{
+		"permission_val": permissionIntToString(permissionInt),
+		"permission_int": permissionInt,
+	})
 }
 
 func InventoryHbs(c *fiber.Ctx) error {
-	permissionInt := getNthDigit(c.Locals("permission_val").(int), 3)
-
-	if permissionInt > 0 {
-		return c.Render("inventory", fiber.Map{
-			"permission_val": permissionIntToString(permissionInt),
-			"permission_int": permissionInt,
-		})
-	}
-
-	return c.Redirect("/dashboard")
+	permissionInt := c.Locals("permission_int").(int64)
+	return c.Render("inventory", fiber.Map{
+		"permission_val": permissionIntToString(permissionInt),
+		"permission_int": permissionInt,
+	})
 }

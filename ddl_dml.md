@@ -112,7 +112,7 @@ INSERT INTO users (user_id, username, password, email, permission_val, archived)
 VALUES
     ('USR0001', 'john_doe', '$2y$04$MkJJMmwUOZXdtGJ1fTjVEuRBjwdNQNz5XkfXSNHCDc1Ymiv3dntgi', 'john.doe@example.com', '3021', FALSE),
     ('USR0002', 'jane_smith', '$2y$04$PYI1sj4oJJxTolfCWLknp.0gOxYdAPDKADHq3AMrtkjy2vo1tjcH6', 'jane.smith@example.com', '1203', FALSE),
-    ('USR0003', 'alice_johnson', '$2y$04$sjhaJ2ul43EptKazMFATTut/MBoTw1FAuCDkTX6H2V/8Xs7BOS9za', 'alice.johnson@example.com', '3321', TRUE);
+    ('USR0003', 'alice_johnson', '$2y$04$sjhaJ2ul43EptKazMFATTut/MBoTw1FAuCDkTX6H2V/8Xs7BOS9za', 'alice.johnson@example.com', '3333', TRUE);
 
 INSERT INTO vendors (vendor_name, vendor_address, tax_id)
 VALUES
@@ -129,7 +129,7 @@ VALUES
 INSERT INTO manufacturing_orders (manufacture_order_number, product_id, quantity, status)
 VALUES
 ('MO001', 3, 200, 'Pending'),
-('MO002', 3, 100, 'In Progress');
+('MO002', 3, 100, 'Pending');
 
 INSERT INTO manufacturing_recipes (material_inventory_id, needed_to_produce_product_id, material_quantity_to_produce_product)
 VALUES

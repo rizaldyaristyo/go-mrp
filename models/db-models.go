@@ -64,12 +64,6 @@ type GetInventory struct {
     LastUpdated                 time.Time       `json:"last_updated"`
     Archived                    bool            `json:"archived"`
 }
-
-
-// ======================================================================================== //
-
-
-
 type GetManufacturingOrder struct {
     OrderID                 int                     `json:"order_id"` 
     ManufactureOrderNumber  string                  `json:"manufacture_order_number"` 
@@ -97,6 +91,30 @@ type ManufacturingRecipe struct {
     TotalMaterialQuantityNeeded     int       `json:"total_material_quantity_needed"`
     MaterialCurrentQuantity         int       `json:"material_current_quantity"`
 }
+
+type MaterialSufficiencies []MaterialSufficiency
+
+type MaterialSufficiency struct {
+    MaterialID      int       `json:"material_id"`
+    MaterialName    string    `json:"material_name"`
+    CurrentQuantity int       `json:"current_quantity"`
+    NeededQuantity  int       `json:"needed_quantity"`
+}
+
+type GetVendors []GetVendor
+
+type GetVendor struct {
+    VendorID        int    `json:"vendor_id"`
+    VendorName      string `json:"vendor_name"`
+    VendorAddress   string `json:"vendor_address"`
+    TaxID           string `json:"tax_id"`
+}
+
+
+// ======================================================================================== //
+
+
+
 
 type Sale struct {
     SaleID           int       `json:"sale_id"` 
