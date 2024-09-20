@@ -227,21 +227,9 @@ func EditInventory(c *fiber.Ctx) error {
 		if (edittedItemType == ""){
 			return c.Status(400).SendString("Missing edittedItemType")
 		}
-		if (edittedSellable == ""){
-			edittedSellable = "0"
-		} else {
-			edittedSellable = "1"
-		}
-		if (edittedPurchasable == ""){
-			edittedPurchasable = "0"
-		} else {
-			edittedPurchasable = "1"
-		}
-		if (edittedManufacturable == ""){
-			edittedManufacturable = "0"
-		} else {
-			edittedManufacturable = "1"
-		}
+		if (edittedSellable == ""){ edittedSellable = "0" } else { edittedSellable = "1"}
+		if (edittedPurchasable == ""){ edittedPurchasable = "0" } else { edittedPurchasable = "1"}
+		if (edittedManufacturable == ""){ edittedManufacturable = "0" } else { edittedManufacturable = "1"}
 		if (edittedPrice == ""){
 			return c.Status(400).SendString("Missing edittedPrice")
 		}

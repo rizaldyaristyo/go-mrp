@@ -41,117 +41,27 @@ func getNthDigit(fourDigitInteger int, nth int) int64 {
 	return int64(nthDigitInt)
 }
 
-// func RoleMiddleware(c *fiber.Ctx) error {
-// 	username := string(c.Locals("username").(string))
-// 	permission_int := GetPermissionVal(username)
-// 	c.Locals("permission_val", permission_int)
-// 	return c.Next()
-// }
+func RoleMiddleware(role string, level int) fiber.Handler{
+	return func(c *fiber.Ctx) error {
+		var nthDigit int
+		switch role{
+		case "Sales":
+			nthDigit = 0
+		case "Purchasing":
+			nthDigit = 1
+		case "Manufacturing":
+			nthDigit = 2
+		case "Inventory":
+			nthDigit = 3
+		default:
+			nthDigit = -1
+		}
 
-func RoleSalesLevel1Middleware(c *fiber.Ctx) error {
-	permission_int := getNthDigit(GetPermissionVal(string(c.Locals("username").(string))), 0)
-	if permission_int < 1 {
-		return c.Status(401).SendString("Access Denied")
+		permission_int := getNthDigit(GetPermissionVal(string(c.Locals("username").(string))), nthDigit)
+		if permission_int < 0 {
+			return c.Status(401).SendString("Access Denied")
+		}
+		c.Locals("permission_int", permission_int)
+		return c.Next()
 	}
-	c.Locals("permission_int", permission_int)
-	return c.Next()
-}
-
-func RoleSalesLevel2Middleware(c *fiber.Ctx) error {
-	permission_int := getNthDigit(GetPermissionVal(string(c.Locals("username").(string))), 0)
-	if permission_int < 2 {
-		return c.Status(401).SendString("Access Denied")
-	}
-	c.Locals("permission_int", permission_int)
-	return c.Next()
-}
-
-func RoleSalesLevel3Middleware(c *fiber.Ctx) error {
-	permission_int := getNthDigit(GetPermissionVal(string(c.Locals("username").(string))), 0)
-	if permission_int < 3 {
-		return c.Status(401).SendString("Access Denied")
-	}
-	c.Locals("permission_int", permission_int)
-	return c.Next()
-}
-
-func RolePurchasingLevel1Middleware(c *fiber.Ctx) error {
-	permission_int := getNthDigit(GetPermissionVal(string(c.Locals("username").(string))), 1)
-	if permission_int < 1 {
-		return c.Status(401).SendString("Access Denied")
-	}
-	c.Locals("permission_int", permission_int)
-	return c.Next()
-}
-
-func RolePurchasingLevel2Middleware(c *fiber.Ctx) error {
-	permission_int := getNthDigit(GetPermissionVal(string(c.Locals("username").(string))), 1)
-	if permission_int < 2 {
-		return c.Status(401).SendString("Access Denied")
-	}
-	c.Locals("permission_int", permission_int)
-	return c.Next()
-}
-
-func RolePurchasingLevel3Middleware(c *fiber.Ctx) error {
-	permission_int := getNthDigit(GetPermissionVal(string(c.Locals("username").(string))), 1)
-	if permission_int < 3 {
-		return c.Status(401).SendString("Access Denied")
-	}
-	c.Locals("permission_int", permission_int)
-	return c.Next()
-}
-
-func RoleManufacturingLevel1Middleware(c *fiber.Ctx) error {
-	permission_int := getNthDigit(GetPermissionVal(string(c.Locals("username").(string))), 2)
-	if permission_int < 1 {
-		return c.Status(401).SendString("Access Denied")
-	}
-	c.Locals("permission_int", permission_int)
-	return c.Next()
-}
-
-func RoleManufacturingLevel2Middleware(c *fiber.Ctx) error {
-	permission_int := getNthDigit(GetPermissionVal(string(c.Locals("username").(string))), 2)
-	if permission_int < 2 {
-		return c.Status(401).SendString("Access Denied")
-	}
-	c.Locals("permission_int", permission_int)
-	return c.Next()
-}
-
-func RoleManufacturingLevel3Middleware(c *fiber.Ctx) error {
-	permission_int := getNthDigit(GetPermissionVal(string(c.Locals("username").(string))), 2)
-	if permission_int < 3 {
-		return c.Status(401).SendString("Access Denied")
-	}
-	c.Locals("permission_int", permission_int)
-	return c.Next()
-}
-
-func RoleInventoryLevel1Middleware(c *fiber.Ctx) error {
-	permission_int := getNthDigit(GetPermissionVal(string(c.Locals("username").(string))), 3)
-	if permission_int < 1 {
-		return c.Status(401).SendString("Access Denied")
-	}
-	c.Locals("permission_int", permission_int)
-	return c.Next()
-}
-
-func RoleInventoryLevel2Middleware(c *fiber.Ctx) error {
-	permission_int := getNthDigit(GetPermissionVal(string(c.Locals("username").(string))), 3)
-	if permission_int < 2 {
-		return c.Status(401).SendString("Access Denied")
-	}
-	c.Locals("permission_int", permission_int)
-	return c.Next()
-}
-
-func RoleInventoryLevel3Middleware(c *fiber.Ctx) error {
-	permission_int := getNthDigit(GetPermissionVal(string(c.Locals("username").(string))), 3)
-	if permission_int < 3 {
-		return c.Status(401).SendString("Access Denied")
-	}
-	c.Locals("permission_int", permission_int)
-	return c.Next()
 }

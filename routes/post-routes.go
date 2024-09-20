@@ -16,18 +16,18 @@ func PostRoutes(app *fiber.App) {
 	app.Post("/logout", middleware.JWTMiddleware, handlers.Logout)
 
 	// Role Specific Routes
-	app.Post("/api/GetInventory", middleware.JWTMiddleware, middleware.RoleInventoryLevel1Middleware, handlers.GetInventory)
-	app.Post("/api/GetVendors", middleware.JWTMiddleware, middleware.RoleInventoryLevel1Middleware, handlers.GetVendors)
-	app.Post("/api/ReplenishInventory/:inventory_id", middleware.JWTMiddleware, middleware.RoleInventoryLevel2Middleware, handlers.ReplenishInventory)
-	app.Post("/api/EditInventory/:inventory_id", middleware.JWTMiddleware, middleware.RoleInventoryLevel2Middleware, handlers.EditInventory)
+	app.Post("/api/GetInventory", middleware.JWTMiddleware, middleware.RoleMiddleware("Inventory", 1), handlers.GetInventory)
+	app.Post("/api/GetVendors", middleware.JWTMiddleware, middleware.RoleMiddleware("Inventory", 1), handlers.GetVendors)
+	app.Post("/api/ReplenishInventory/:inventory_id", middleware.JWTMiddleware, middleware.RoleMiddleware("Inventory", 2), handlers.ReplenishInventory)
+	app.Post("/api/EditInventory/:inventory_id", middleware.JWTMiddleware, middleware.RoleMiddleware("Inventory", 2), handlers.EditInventory)
 	// DEV
-	app.Get("/api/GetInventory", middleware.JWTMiddleware, middleware.RoleInventoryLevel1Middleware, handlers.GetInventory)
-	app.Get("/api/GetVendors", middleware.JWTMiddleware, middleware.RoleInventoryLevel1Middleware, handlers.GetVendors)
+	app.Get("/api/GetInventory", middleware.JWTMiddleware, middleware.RoleMiddleware("Inventory", 1), handlers.GetInventory)
+	app.Get("/api/GetVendors", middleware.JWTMiddleware, middleware.RoleMiddleware("Inventory", 1), handlers.GetVendors)
 	
-	app.Post("/api/GetmanufacturingOrder", middleware.JWTMiddleware, middleware.RoleManufacturingLevel1Middleware, handlers.GetManufacturingOrder)
-	app.Post("/api/ApproveManufacturingOrder/:manufacturing_order_id", middleware.JWTMiddleware, middleware.RoleManufacturingLevel3Middleware, handlers.ApproveManufacturingOrder)
-	app.Post("/api/ReceiveManufacturingOrder/:manufacturing_order_id", middleware.JWTMiddleware, middleware.RoleManufacturingLevel3Middleware, handlers.ReceiveManufacturingOrder)
-	app.Post("/api/CancelManufacturingOrder/:manufacturing_order_id", middleware.JWTMiddleware, middleware.RoleManufacturingLevel3Middleware, handlers.CancelManufacturingOrder)
+	app.Post("/api/GetmanufacturingOrder", middleware.JWTMiddleware, middleware.RoleMiddleware("Manufacturing", 1), handlers.GetManufacturingOrder)
+	app.Post("/api/ApproveManufacturingOrder/:manufacturing_order_id", middleware.JWTMiddleware, middleware.RoleMiddleware("Manufacturing", 3), handlers.ApproveManufacturingOrder)
+	app.Post("/api/ReceiveManufacturingOrder/:manufacturing_order_id", middleware.JWTMiddleware, middleware.RoleMiddleware("Manufacturing", 3), handlers.ReceiveManufacturingOrder)
+	app.Post("/api/CancelManufacturingOrder/:manufacturing_order_id", middleware.JWTMiddleware, middleware.RoleMiddleware("Manufacturing", 3), handlers.CancelManufacturingOrder)
 	// DEV
-	app.Get("/api/GetmanufacturingOrder", middleware.JWTMiddleware, middleware.RoleManufacturingLevel1Middleware, handlers.GetManufacturingOrder)
+	app.Get("/api/GetmanufacturingOrder", middleware.JWTMiddleware, middleware.RoleMiddleware("Manufacturing", 1), handlers.GetManufacturingOrder)
 }
