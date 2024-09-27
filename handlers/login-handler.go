@@ -77,3 +77,18 @@ func Login(c *fiber.Ctx) error {
 
     return c.Redirect("/dashboard?login=success")
 }
+
+// for dev
+func DevGetJWT(c *fiber.Ctx) error {
+
+    token := jwt.New(jwt.SigningMethodHS256)
+    claims := token.Claims.(jwt.MapClaims)
+    claims["username"] = "dev"
+    claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
+    t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+    if err != nil {
+        return c.Status(500).SendString("Could not login")
+    }
+
+    return c.Status(200).SendString(t)
+}

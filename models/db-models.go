@@ -64,6 +64,7 @@ type GetInventory struct {
     LastUpdated                 time.Time       `json:"last_updated"`
     Archived                    bool            `json:"archived"`
 }
+
 type GetManufacturingOrder struct {
     OrderID                 int                     `json:"order_id"` 
     ManufactureOrderNumber  string                  `json:"manufacture_order_number"` 
@@ -92,6 +93,26 @@ type ManufacturingRecipe struct {
     MaterialCurrentQuantity         int       `json:"material_current_quantity"`
 }
 
+type OptimizedGetManufacturingOrder struct {
+    OrderID                 int                             `json:"order_id"` 
+    ManufactureOrderNumber  string                          `json:"manufacture_order_number"` 
+    ProductID               int                             `json:"product_id"`
+    ProductName             string                          `json:"product_name"`
+    QuantityToManufacture   int                             `json:"quantity_to_manufacture"` 
+    Status                  string                          `json:"status"` 
+    CreatedAt               sql.NullTime                    `json:"created_at"` 
+    Archived                bool                            `json:"archived"`
+    Recipes                 *[]OptimizedManufacturingRecipe `json:"recipes"`
+}
+
+type OptimizedManufacturingRecipe struct {
+    MaterialQuantityToProduceOne    sql.NullInt64       `json:"material_quantity_to_produce_one"`
+    MaterialID                      sql.NullInt64       `json:"material_id"`
+    MaterialName                    sql.NullString      `json:"material_name"`
+    TotalMaterialQuantityNeeded     sql.NullInt64       `json:"total_material_quantity_needed"`
+    MaterialCurrentQuantity         sql.NullInt64       `json:"material_current_quantity"`
+}
+
 type MaterialSufficiencies []MaterialSufficiency
 
 type MaterialSufficiency struct {
@@ -110,6 +131,26 @@ type GetVendor struct {
     TaxID           string `json:"tax_id"`
 }
 
+type GetProducts struct{
+    ProductName             string              `json:"product_name"`
+    ProductInventoryCode    string              `json:"inventory_code"`
+    ProductID               int                 `json:"product_id"`
+    Recipes                 *[]GetProductRecipe `json:"recipes"`
+}
+
+type GetProductRecipe struct {
+    MaterialID                      sql.NullInt64 `json:"material_id"`
+    MaterialName                    sql.NullString `json:"material_name"`
+    MaterialInventoryCode           sql.NullString `json:"material_inventory_code"`
+    MaterialQuantityToProduceOne    sql.NullInt64 `json:"material_quantity_to_produce_one"`
+    MaterialCurrentQuantity         sql.NullInt64 `json:"material_current_quantity"`
+}
+
+type GetMaterials struct {
+    InventoryID        int     `json:"inventory_id"`
+    ItemName           string  `json:"item_name"`
+    ItemCode           string  `json:"item_code"`
+}
 
 // ======================================================================================== //
 

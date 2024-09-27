@@ -92,7 +92,7 @@
         var inventoryTableBody = document.querySelector('#inventoryTable tbody');
         var hiddenModals = document.querySelector('#hiddenModals');
         const permission_int = {{permission_int}};
-        fetch('/api/getinventory', { method: 'POST' })
+        fetch('/api/GetInventory', { method: 'POST' })
             .then((res) => res.json())  
             .then((data) => {
                 inventoryTableBody.innerHTML = '';
@@ -141,6 +141,7 @@
                                             </div>
                                             <div class="mb-3">
                                                 <label for="replenish-manufacture-or-purchase-radio" class="form-label">Order</label>
+                                                <br>
                                                 <input class="form-check-input" type="radio" name="replenish-manufacture-or-purchase-radio" id="replenish-manufacture-radio-${inventory['inventory_id']}" value="manufacture" ${inventory['manufacturable'] != true ? 'disabled' : 'checked'}>
                                                 <label class="form-check-label" for="replenish-manufacture-radio-${inventory['inventory_id']}">
                                                     Manufacture

@@ -77,6 +77,14 @@ func ManufacturingHbs(c *fiber.Ctx) error {
 	})
 }
 
+func ManufacturingRecipesHbs(c *fiber.Ctx) error {
+	permissionInt := c.Locals("permission_int").(int64)
+	return c.Render("manufacturing-recipes", fiber.Map{
+		"permission_val": permissionIntToString(permissionInt),
+		"permission_int": permissionInt,
+	})
+}
+
 func InventoryHbs(c *fiber.Ctx) error {
 	permissionInt := c.Locals("permission_int").(int64)
 	return c.Render("inventory", fiber.Map{

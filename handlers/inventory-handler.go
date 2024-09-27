@@ -13,8 +13,8 @@ func GetInventory(c *fiber.Ctx) error {
 	inventoryRows, err := database.DB.Query(
 		`
 		-- omg my brain melted thinking this query 🫠, i admit it, im AI assisted with this one
-		-- for this one query ill be documenting it so i won't lost in the sauce
-		SELECT 
+		-- for this one query ill be documenting BETTER it so i won't lost in the sauce
+		SELECT
 			COALESCE(d.ManufacturingDemandQuantity, 0) AS ManufacturingDemandQuantity,
 			COALESCE(d.SalesDemandQuantity, 0) AS SalesDemandQuantity,
 			COALESCE(d.ManufacturingDemandQuantity, 0) + COALESCE(d.SalesDemandQuantity, 0) AS TotalDemandQuantity,
@@ -40,13 +40,16 @@ func GetInventory(c *fiber.Ctx) error {
 		FROM inventory inv
 		LEFT JOIN vendors v ON inv.vendor_id = v.vendor_id
 		LEFT JOIN (
+			-- subquery for demand
 			SELECT 
 				inv.inventory_id,
-				SUM(CASE WHEN mo.status = 'Pending' THEN mr.material_quantity_to_produce_product * mo.quantity ELSE 0 END) AS ManufacturingDemandQuantity,
+				-- mo demand calculation (DISTINCT to avoid duplicates)
+				SUM(DISTINCT mr.material_quantity_to_produce_product * mo.quantity) AS ManufacturingDemandQuantity,
+				-- so demand calculation
 				SUM(CASE WHEN s.sale_status = 'Pending' THEN s.quantity ELSE 0 END) AS SalesDemandQuantity
 			FROM inventory inv
 			LEFT JOIN manufacturing_recipes mr ON inv.inventory_id = mr.material_inventory_id
-			LEFT JOIN manufacturing_orders mo ON mr.needed_to_produce_product_id = mo.product_id
+			LEFT JOIN manufacturing_orders mo ON mr.needed_to_produce_product_id = mo.product_id AND mo.status = 'Pending'
 			LEFT JOIN sales s ON inv.inventory_id = s.item_id
 			GROUP BY inv.inventory_id
 		) d ON inv.inventory_id = d.inventory_id

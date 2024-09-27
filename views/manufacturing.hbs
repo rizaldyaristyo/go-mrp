@@ -133,11 +133,11 @@
                                             Recipes:<br>
                                             ${
                                                 manufacturing['recipes'] == null ? 'No Recipes' : manufacturing['recipes'].map((recipe) => `- ${
-                                                    recipe['material_name']
+                                                    recipe['material_name']['String']
                                                 } x ${
-                                                    recipe['total_material_quantity_needed']
+                                                    recipe['total_material_quantity_needed']['Int64']
                                                 } ${
-                                                    recipe['material_current_quantity'] < recipe['total_material_quantity_needed'] ? '⚠️<a href="/inventory" style="text-decoration:none;">Check Inventory!</a>' : ''
+                                                    recipe['material_current_quantity']['Int64'] < recipe['total_material_quantity_needed']['Int64'] ? '⚠️<a href="/inventory" style="text-decoration:none;">Check Inventory!</a>' : ''
                                                 }<br>`).join('')
                                             }
                                         </div>
@@ -147,7 +147,7 @@
                                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#confirmation-modal-${manufacturing['order_id']}" ${(permission_int < 3) || (manufacturing['recipes'] == null 
                                                                                                                                                                                     ? false 
                                                                                                                                                                                     : manufacturing['recipes'].map(
-                                                                                                                                                                                            (recipe) => recipe['material_current_quantity'] < recipe['total_material_quantity_needed']
+                                                                                                                                                                                            (recipe) => recipe['material_current_quantity']['Int64'] < recipe['total_material_quantity_needed']['Int64']
                                                                                                                                                                                         ).includes(true))
                                                                                                                                                                                             ? 'disabled'
                                                                                                                                                                                             : ''}>Approve Order</button>
