@@ -33,7 +33,7 @@
                             <th scope="col">Sellable</th>
                             <th scope="col">Purchasable</th>
                             <th scope="col">Manufacturable</th>
-                            <th scope="col">Price</th>
+                            <th scope="col">Price (Mfg.)</th>
                             <th scope="col">Currency</th>
                             <th scope="col">Quantity</th>
                             <th scope="col">Qty. Warning</th>
@@ -203,7 +203,7 @@
                                                 <label for="edit-manufacturable-${inventory['inventory_id']}" class="form-label">Manufacturable</label>
                                             </div>
                                             <div class="mb-3">
-                                                <label for="edit-price-${inventory['inventory_id']}" class="form-label">Price</label>
+                                                <label for="edit-price-${inventory['inventory_id']}" class="form-label">Mfg. Price (Recommended: ${inventory['recommended_mfg_price']['Valid'] == true ? inventory['recommended_mfg_price']['Float64'] : 'N/A'})</label>
                                                 <input type="number" class="form-control" id="edit-price-${inventory['inventory_id']}" name="edit-price" value="${inventory['price']}" required>
                                             </div>
                                             <div class="mb-3">

@@ -13,47 +13,53 @@ func GetInventory(c *fiber.Ctx) error {
 	inventoryRows, err := database.DB.Query(
 		`
 		-- omg my brain melted thinking this query 🫠, i admit it, im AI assisted with this one
-		-- for this one query ill be documenting BETTER it so i won't lost in the sauce
 		SELECT
-			COALESCE(d.ManufacturingDemandQuantity, 0) AS ManufacturingDemandQuantity,
-			COALESCE(d.SalesDemandQuantity, 0) AS SalesDemandQuantity,
-			COALESCE(d.ManufacturingDemandQuantity, 0) + COALESCE(d.SalesDemandQuantity, 0) AS TotalDemandQuantity,
-			inv.inventory_id AS InventoryID,
-			inv.item_name AS ItemName,
-			inv.vendor_id AS VendorID,
-			v.vendor_name AS VendorName,
-			v.vendor_address AS VendorAddress,
-			v.tax_id AS TaxID,
-			inv.item_code AS ItemCode,
-			inv.item_code_2 AS ItemCode2,
-			inv.item_type AS ItemType,
-			inv.sellable AS Sellable,
-			inv.purchaseable AS Purchaseable,
-			inv.manufacturable AS Manufacturable,
-			inv.price AS Price,
-			inv.price_2 AS Price2,
-			inv.currency AS Currency,
-			inv.quantity AS Quantity,
-			inv.minimum_stock_warning AS MinimumStock,
-			inv.last_updated AS LastUpdated,
-			inv.archived AS Archived
+		COALESCE(d.ManufacturingDemandQuantity, 0) AS ManufacturingDemandQuantity,
+		COALESCE(d.SalesDemandQuantity, 0) AS SalesDemandQuantity,
+		COALESCE(d.ManufacturingDemandQuantity, 0) + COALESCE(d.SalesDemandQuantity, 0) AS TotalDemandQuantity,
+		inv.inventory_id AS InventoryID,
+		inv.item_name AS ItemName,
+		inv.vendor_id AS VendorID,
+		v.vendor_name AS VendorName,
+		v.vendor_address AS VendorAddress,
+		v.tax_id AS TaxID,
+		inv.item_code AS ItemCode,
+		inv.item_code_2 AS ItemCode2,
+		inv.item_type AS ItemType,
+		inv.sellable AS Sellable,
+		inv.purchaseable AS Purchaseable,
+		inv.manufacturable AS Manufacturable,
+		inv.price AS Price,
+		inv.price_2 AS Price2,
+		inv.currency AS Currency,
+		inv.quantity AS Quantity,
+		inv.minimum_stock_warning AS MinimumStock,
+		inv.last_updated AS LastUpdated,
+		inv.archived AS Archived,
+		-- Add RecommendedMfgPrice here
+		(
+			SELECT SUM(i.price * mr.material_quantity_to_produce_product)
+			FROM manufacturing_recipes mr
+			JOIN inventory i ON mr.material_inventory_id = i.inventory_id
+			WHERE mr.needed_to_produce_product_id = inv.inventory_id
+		) AS RecommendedMfgPrice -- // TODO: Fix Calculation for RecommendedMfgPrice
+	FROM inventory inv
+	LEFT JOIN vendors v ON inv.vendor_id = v.vendor_id
+	LEFT JOIN (
+		-- subquery for demand
+		SELECT 
+			inv.inventory_id,
+			-- mo demand calculation (DISTINCT to avoid duplicates)
+			SUM(DISTINCT mr.material_quantity_to_produce_product * mo.quantity) AS ManufacturingDemandQuantity,
+			-- so demand calculation
+			SUM(CASE WHEN s.delivery_status = 'Pending' THEN s.quantity ELSE 0 END) AS SalesDemandQuantity
 		FROM inventory inv
-		LEFT JOIN vendors v ON inv.vendor_id = v.vendor_id
-		LEFT JOIN (
-			-- subquery for demand
-			SELECT 
-				inv.inventory_id,
-				-- mo demand calculation (DISTINCT to avoid duplicates)
-				SUM(DISTINCT mr.material_quantity_to_produce_product * mo.quantity) AS ManufacturingDemandQuantity,
-				-- so demand calculation
-				SUM(CASE WHEN s.sale_status = 'Pending' THEN s.quantity ELSE 0 END) AS SalesDemandQuantity
-			FROM inventory inv
-			LEFT JOIN manufacturing_recipes mr ON inv.inventory_id = mr.material_inventory_id
-			LEFT JOIN manufacturing_orders mo ON mr.needed_to_produce_product_id = mo.product_id AND mo.status = 'Pending'
-			LEFT JOIN sales s ON inv.inventory_id = s.item_id
-			GROUP BY inv.inventory_id
-		) d ON inv.inventory_id = d.inventory_id
-		ORDER BY TotalDemandQuantity DESC;
+		LEFT JOIN manufacturing_recipes mr ON inv.inventory_id = mr.material_inventory_id
+		LEFT JOIN manufacturing_orders mo ON mr.needed_to_produce_product_id = mo.product_id AND mo.status = 'Pending'
+		LEFT JOIN sales s ON inv.inventory_id = s.item_id
+		GROUP BY inv.inventory_id
+	) d ON inv.inventory_id = d.inventory_id
+	ORDER BY TotalDemandQuantity DESC;
 		`,
 	)
 	if err != nil {
@@ -87,6 +93,7 @@ func GetInventory(c *fiber.Ctx) error {
 			&inventory.MinimumStock,
 			&inventory.LastUpdated,
 			&inventory.Archived,
+			&inventory.RecommendedMfgPrice,
 		)
 
 		manufacturingModels = append(manufacturingModels, inventory)

@@ -28,14 +28,18 @@ func PostRoutes(app *fiber.App) {
 	app.Post("/api/GetRecipes", middleware.JWTMiddleware, middleware.RoleMiddleware("Manufacturing", 1), handlers.GetRecipes)
 	app.Post("/api/EditRecipe/:product_id", middleware.JWTMiddleware, middleware.RoleMiddleware("Manufacturing", 1), handlers.EditRecipe)
 	app.Post("/api/GetMaterials", middleware.JWTMiddleware, middleware.RoleMiddleware("Manufacturing", 1), handlers.GetMaterials)
+	app.Post("/api/GetSales", middleware.JWTMiddleware, middleware.RoleMiddleware("Sales", 1), handlers.GetSales)
+	app.Post("/api/GetSalesSensitive", middleware.JWTMiddleware, middleware.RoleMiddleware("Sales", 2), handlers.GetSalesSensitive)
 	
 	// DEV
+	app.Post("/dev/GetJWT", handlers.DevGetJWT)
+	app.Get("/dev/GetJWT", handlers.DevGetJWT)
 	app.Get("/api/GetInventory", middleware.JWTMiddleware, middleware.RoleMiddleware("Inventory", 1), handlers.GetInventory)
 	app.Get("/api/GetVendors", middleware.JWTMiddleware, middleware.RoleMiddleware("Inventory", 1), handlers.GetVendors)
 	// app.Get("/api/GetmanufacturingOrder", middleware.JWTMiddleware, middleware.RoleMiddleware("Manufacturing", 1), handlers.GetManufacturingOrder)
 	app.Get("/api/GetmanufacturingOrder2", middleware.JWTMiddleware, middleware.RoleMiddleware("Manufacturing", 1), handlers.OptimizedGetManufacturingOrder)
 	app.Get("/api/GetRecipes", middleware.JWTMiddleware, middleware.RoleMiddleware("Manufacturing", 1), handlers.GetRecipes)
 	app.Get("/api/GetMaterials", middleware.JWTMiddleware, middleware.RoleMiddleware("Manufacturing", 1), handlers.GetMaterials)
-	app.Get("/dev/GetJWT", handlers.DevGetJWT)
-	app.Post("/dev/GetJWT", handlers.DevGetJWT)
+	app.Get("/api/GetSales", middleware.JWTMiddleware, middleware.RoleMiddleware("Sales", 1), handlers.GetSales)
+	app.Get("/api/GetSalesSensitive", middleware.JWTMiddleware, middleware.RoleMiddleware("Sales", 2), handlers.GetSalesSensitive)
 }

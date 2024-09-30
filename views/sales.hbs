@@ -14,41 +14,249 @@
     <!-- load header from partials -->
     {{> 'partials/header' }}
     <main>
-        <h1>Sales Dashboard</h1>
+        <h1>Sales</h1>
         <h3>Level: {{permission_val}}</h3>
         <a href="/dashboard">Back to Dashboard</a>
-        <section id="purchase-orders">
-            <table class="table">
-                <thead>
-                    <tr>
-                    <th scope="col">Sales Order Number</th>
-                    <th scope="col"></th>
-                    <th scope="col">Last</th>
-                    <th scope="col">Handle</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                    <th scope="row">1</th>
-                    <td>Mark</td>
-                    <td>Otto</td>
-                    <td>@mdo</td>
-                    </tr>
-                    <tr>
-                    <th scope="row">2</th>
-                    <td>Jacob</td>
-                    <td>Thornton</td>
-                    <td>@fat</td>
-                    </tr>
-                    <tr>
-                    <th scope="row">3</th>
-                    <td colspan="2">Larry the Bird</td>
-                    <td>@twitter</td>
-                    </tr>
-                </tbody>
-            </table>
+        {{!-- <section id="stock-forecast">
+            <canvas id="stock-forecast-chart" class="charts"></canvas>
+        </section> --}}
+        <section id="recipe-list">
+            <div style="overflow-x:auto">
+                <input type="text" id="search-bar" onkeyup="searchRecipe()" placeholder="Search for names..">
+                <table class="table" id="recipeTable">
+                    <thead>
+                        <tr>
+                            <th scope="col">Sales Order Number</th>
+                            <th scope="col">Sales Order Number</th>
+                            <th scope="col">Product Name</th>
+                            <th scope="col">Quantity</th>
+                            {{!-- <th scope="col">Sent Quantity</th> --}}
+                            {{!-- <th scope="col">Mfg. Price per Unit</th> --}}
+                            <th scope="col">Sale Price per Unit</th>
+                            {{!-- <th scope="col">Tax (%)</th> --}}
+                            <th scope="col">Customer Name</th>
+                            {{!-- <th scope="col">Sales Channel</th> --}}
+                            {{!-- <th scope="col">Payment Method</th> --}}
+                            <th scope="col">Payment Status</th>
+                            <th scope="col">Delivery Status</th>
+                            {{!-- <th scope="col">Status</th> --}}
+                            {{!-- <th scope="col">Order Date</th> --}}
+                            {{!-- <th scope="col">Payment Date</th> --}}
+                            {{!-- <th scope="col">Delivery Date</th> --}}
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td colspan="3" class="text-center"><i>No Data</i></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        <section>
+            <div id="hiddenModals"></div>
+            <div id="toastArea"></div>
         </section>
     </main>
     {{> 'partials/footer' }}
 </body>
 </html>
+<script>
+    let globalMaterials;
+    async function updateTable() {
+        const materialResponse = await fetch('/api/GetMaterials', { method: 'POST' });
+        materials = await materialResponse.json();
+        globalMaterials = materials;
+        var recipeTableBody = document.querySelector('#recipeTable tbody');
+        var hiddenModals = document.querySelector('#hiddenModals');
+        const permission_int = {{permission_int}};
+        fetch('/api/GetRecipes', { method: 'POST' })
+            .then((res) => res.json())
+                        .then((data) => {
+                recipeTableBody.innerHTML = '';
+                data.forEach((productRecipe, index) => {
+                    var row = document.createElement('tr');
+                    row.setAttribute('class', 'search-target');
+                    row.innerHTML = `
+                        <td>${productRecipe['product_name']}</td>
+                        <td>${productRecipe['inventory_code']}</td>
+                        <td>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-edit-recipe-${productRecipe['product_id']}" ${permission_int < 2 ? 'disabled' : ''}>View Recipe</button>
+                        </td>
+                        <td style="display: none">${productRecipe['product_id']}</td>
+                    `;
+                    recipeTableBody.appendChild(row);
+
+                    hiddenModals.innerHTML += `
+                        <div class="modal fade" id="modal-edit-recipe-${productRecipe['product_id']}" tabindex="-1" role="dialog" aria-labelledby="modal-edit-recipe-${productRecipe['product_id']}Label" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h1 class="modal-title fs-5" id="modal-header-edit-${productRecipe['product_id']}Label">Edit Recipe</h1>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <form action="/api/EditRecipe/${productRecipe['product_id']}" method="POST">
+                                        <div class="modal-body">
+                                                <div class="mb-3">
+                                                    <span>Product</span>
+                                                    <h3>${productRecipe['product_name']}</h3>
+                                                </div>
+                                                <hr>
+                                                <div id="recipes-space-${productRecipe['product_id']}">
+                                                    {{!-- to be filled by js --}}
+                                                </div>
+                                                <div id="new-material-space-${productRecipe['product_id']}">
+                                                    {{!-- to be filled by js --}}
+                                                </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                            <input type="submit" class="btn btn-primary" value="Save Changes">
+                                        </div>
+                                    </form> 
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    const selectElement = document.getElementById('recipes-space-' + productRecipe['product_id']);
+                    productRecipe['recipes'].forEach((recipe, index2) => {
+                        let div = document.createElement('div');
+                        div.className = 'mb-3';
+                        div.innerHTML = `
+                            <div class="mb-3">
+                                <h5 class="text-muted">Material ${index}-${index2+1}</h5>
+                            </div>
+                            <div class="mb-3 ms-3 me-5">
+                                <label for="recipe-material-name-${index}-${index2+1}" class="form-label">Material Name</label>
+                                <select class="form-select" id="recipe-material-name-${index}-${index2+1}" name="recipe-material-name-${index}-${index2+1}" required>
+                                    <option value="${recipe['material_id']['Int64']}" selected>${recipe['material_name']['String']} - ${recipe['material_inventory_code']['String']} (Current)</option>
+                                    {{!-- to be filled by js --}}
+                                </select>
+                            </div>
+                            <div class="mb-3 ms-3 me-5">
+                                <label for="recipe-material-quantity-to-produce-one-${index}-${index2+1}" class="form-label">Quantity Needed to Produce</label>
+                                <input type="number" class="form-control" id="recipe-material-quantity-to-produce-one-${index}-${index2+1}" name="recipe-material-quantity-to-produce-one-${index}-${index2+1}" value="${recipe['material_quantity_to_produce_one']['Int64']}" required>
+                            </div>
+                            <hr/>
+                        `;
+                        selectElement.appendChild(div);
+                        let selectRecipeMaterialNameElement = document.getElementById('recipe-material-name-' + (index) + "-" + (index2+1));
+                        materials.forEach((material) => {
+                            let option = document.createElement('option');
+                            option.value = material['inventory_id'];
+                            option.text = material['item_name'] + " - " + material['item_code'];
+                            option.id = material['item_code']+material['inventory_id'];
+                            selectRecipeMaterialNameElement.appendChild(option);
+                        })
+                    });
+                    let div = document.createElement('div');
+                    div.className = 'text-center mb-3';
+                    div.innerHTML = `
+                        <div>
+                            <button type="button" class="btn btn-primary" onclick="addRecipe(${productRecipe['product_id']})">Add New Material</button>
+                        </div>
+                        `;
+                    selectElement.appendChild(div);
+                });
+            });
+    }
+
+
+    var recipeCounter = 0;
+    function addRecipe(product_id) {
+        recipeCounter++;
+        let div = document.createElement('div');
+        div.className = 'mb-3';
+        div.id = `new-recipe-material-${recipeCounter}`
+        div.innerHTML = `
+            <div class="mb-3">
+                <h5 class="text-muted"><button type="button" class="btn-close" onclick="deleteNewRecipe(${recipeCounter})" aria-label="Close"></button>New Material ${recipeCounter}</h5>
+            </div>
+            <div class="mb-3 ms-3 me-5">
+                <label for="recipe-material-name-${recipeCounter}" class="form-label">Material Name</label>
+                <select class="form-select" id="new-recipe-material-name-${recipeCounter}" name="recipe-material-name-${recipeCounter}" required>
+                    {{!-- to be filled by js --}}
+                </select>
+            </div>
+            <div class="mb-3 ms-3 me-5">
+                <label for="recipe-material-quantity-to-produce-one-${recipeCounter}" class="form-label">Quantity Needed to Produce</label>
+                <input type="number" class="form-control" id="new-recipe-material-quantity-to-produce-one-${recipeCounter}" name="recipe-material-quantity-to-produce-one-${recipeCounter}" required>
+            </div>
+            <hr/>
+        `;
+        document.getElementById('new-material-space-'+product_id).appendChild(div);
+    }
+
+    function deleteNewRecipe(product_id) {
+        document.getElementById(`new-recipe-material-${recipeCounter}`).remove();
+        recipeCounter--;
+        if (recipeCounter == 0) {
+            document.getElementById(`new-material-space-${product_id}`).innerHTML = '';
+        }
+    }
+
+    function searchRecipe() {
+        var input, filter, table, tr, td, i, txtValue;
+        input = document.getElementById("search-bar");
+        filter = input.value.toUpperCase();
+        table = document.getElementById("recipeTable");
+        tr = table.getElementsByTagName("tr");
+        for (i = 0; i < tr.length; i++) {
+            td = tr[i].getElementsByTagName("td")[0];
+            if (td) {
+            txtValue = td.textContent || td.innerText;
+            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                tr[i].style.display = "";
+            } else {
+                tr[i].style.display = "none";
+            }
+            }     
+                    }
+    }
+
+    updateTable();
+
+    const toastArea = document.getElementById('toastArea');
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('replenish-success') == 'true') {
+        if (urlParams.get('replenish-type') == 'manufacture') {
+            toastArea.innerHTML += `
+            <div class="toast position-fixed bottom-0 start-0 p-1" style="margin: 25px" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-body">
+                    Manufacture Order successful!
+                    <div class="mt-2 pt-2 border-top">
+                        <button type="button" class="btn btn-primary btn-sm" onclick="location.href='/manufacturing'">Go to Manufacturing</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">Close</button>
+                    </div>
+                </div>
+            </div>
+            `;
+        } else if (urlParams.get('replenish-type') == 'purchase') {
+            toastArea.innerHTML += `
+            <div class="toast position-fixed bottom-0 start-0 p-1" style="margin: 25px" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="toast-body">
+                    Purchase Order successful!
+                    <div class="mt-2 pt-2 border-top">
+                        <button type="button" class="btn btn-primary btn-sm">Go to</button>
+                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="toast">Close</button>
+                    </div>
+                </div>
+            </div>
+            `;
+        }
+
+        {{!-- Show toast --}}
+        window.onload = (event) => {
+            var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+            var toastList = toastElList.map(function (toastEl) {
+                return new bootstrap.Toast(toastEl)
+            })
+            toastList.forEach(toast => {
+                toast.show()
+            })
+        }
+    }
+</script>
+{{> 'partials/js-resetpath' }}

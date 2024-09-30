@@ -1,4 +1,3 @@
-```sql
 DROP DATABASE db_gomrp;
 
 CREATE DATABASE db_gomrp;
@@ -64,17 +63,42 @@ CREATE TABLE manufacturing_recipes (
     FOREIGN KEY (needed_to_produce_product_id) REFERENCES inventory(inventory_id)
 );
 
+CREATE TABLE customers (
+    customer_id INT AUTO_INCREMENT PRIMARY KEY,
+    customer_name VARCHAR(100) NOT NULL,
+    customer_bank_name VARCHAR(50),
+    customer_bank_account_number VARCHAR(50),
+    customer_cc_number VARCHAR(50),
+    customer_address VARCHAR(255) NOT NULL,
+    customer_email VARCHAR(100),
+    customer_phone VARCHAR(30),
+    customer_tax_id VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    archived BOOLEAN DEFAULT FALSE -- Soft delete flag
+);
+
 CREATE TABLE sales (
     sale_id INT AUTO_INCREMENT PRIMARY KEY,
     sales_order_number VARCHAR(50) UNIQUE NOT NULL,
     item_id INT,
     quantity INT NOT NULL,
+    sent_quantity INT DEFAULT 0, -- Tracks how much has been delivered
     sale_price_per_unit DECIMAL(10, 2) NOT NULL,
-    sale_status ENUM('Pending', 'Paid', 'Delivered', 'Cancelled') DEFAULT 'Pending',
-    sale_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    tax_percent DECIMAL(10, 2) NOT NULL,
+    customer_id INT,
+    sales_channel ENUM('Online', 'In-Store', 'Distributor') DEFAULT 'Online',
+    payment_method ENUM('Cash', 'Credit Card', 'Bank Transfer'),
+    payment_status ENUM('Pending', 'Paid Partially', 'Paid') DEFAULT 'Pending',
+    delivery_status ENUM('Pending', 'Delivered Partially', 'Delivered') DEFAULT 'Pending',
+    canceled BOOLEAN DEFAULT FALSE, -- Marks if the order is canceled
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    payment_date TIMESTAMP,
+    delivery_date TIMESTAMP,
     archived BOOLEAN DEFAULT FALSE, -- Soft delete flag
-    FOREIGN KEY (item_id) REFERENCES inventory(inventory_id)
+    FOREIGN KEY (item_id) REFERENCES inventory(inventory_id),
+    FOREIGN KEY (customer_id) REFERENCES customers(customer_id)
 );
+
 
 CREATE TABLE purchases (
     purchase_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -137,11 +161,21 @@ VALUES
 (2, 3, 50),
 (3, 4, 50);
 
-INSERT INTO sales (sales_order_number, item_id, quantity, sale_price_per_unit, sale_status)
+INSERT INTO customers (customer_name, customer_bank_name, customer_bank_account_number, customer_cc_number, customer_address, customer_email, customer_phone, customer_tax_id)
 VALUES
-('SO001', 3, 50, 300, 'Pending'),
-('SO002', 3, 30, 300, 'Paid'),
-('SO003', 3, 20, 300, 'Delivered');
+('John Doe', 'Bank A', '1234567890', '1234-5678-9012-3456', 'Jl. Merah No. 1', 'john.doe@example.com', '08123456789', 'TAX001'),
+('Jane Smith', 'Bank B', '0987654321', '9876-5432-1098-7654', 'Jl. Biru No. 2', 'jane.smith@example.com', '08234567890', 'TAX002'),
+('Alice Johnson', 'Bank C', '5551234567', NULL, 'Jl. Kuning No. 3', 'alice.johnson@example.com', '08345678901', 'TAX003'),
+('Bob Brown', 'Bank D', '4441234567', '1234-4321-5678-9012', 'Jl. Hijau No. 4', 'bob.brown@example.com', '08456789012', 'TAX004'),
+('Charlie Green', 'Bank E', '7771234567', NULL, 'Jl. Putih No. 5', 'charlie.green@example.com', '08567890123', 'TAX005');
+
+INSERT INTO sales (sales_order_number, item_id, quantity, sent_quantity, sale_price_per_unit, tax_percent, customer_id, sales_channel, payment_method, payment_status, delivery_status, canceled, payment_date, delivery_date)
+VALUES
+('SO001', 3, 50, 0, 300.00, 10.00, 1, 'Online', 'Credit Card', 'Pending', 'Delivered', FALSE, NULL, NULL),
+('SO002', 3, 30, 30, 300.00, 10.00, 2, 'In-Store', 'Cash', 'Paid', 'Delivered', FALSE, '2024-09-02 15:30:00', '2024-09-02 15:30:00'),
+('SO004', 2, 10, 0, 50.00, 10.00, 3, 'Online', 'Credit Card', 'Pending', 'Delivered', FALSE, NULL, NULL),
+('SO005', 4, 5, 5, 100.00, 10.00, 2, 'In-Store', 'Cash', 'Paid', 'Delivered', FALSE, '2024-09-03 13:45:00', '2024-09-03 14:00:00'),
+('SO006', 1, 100, 0, 10.00, 10.00, 1, 'Online', 'Credit Card', 'Pending', 'Delivered', TRUE, NULL, NULL);
 
 INSERT INTO purchases (purchase_order_number, item_id, quantity, purchase_price_per_unit, purchase_status)
 VALUES
@@ -158,4 +192,3 @@ INSERT INTO outcome (purchase_id, amount, currency, spent_date)
 VALUES
 (1, 5000.00, 'IDR', '2024-09-03 09:00:00'),
 (2, 10000.00, 'IDR', '2024-09-04 13:45:00');
-```

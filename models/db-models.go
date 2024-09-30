@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-// 1. User Management and Permissions
-
 type User struct {
     UserID        string       `json:"user_id"`          // Custom employee ID
     Username      string       `json:"username"`
@@ -38,8 +36,6 @@ type UserLogin struct {
     Password string `json:"password"`
 }
 
-// 2. Inventory
-
 type GetInventory struct {
     ManufacturingDemandQuantity sql.NullInt64   `json:"manufacturing_demand_quantity"`
     SalesDemandQuantity         sql.NullInt64   `json:"sales_demand_quantity"`
@@ -63,16 +59,17 @@ type GetInventory struct {
     MinimumStock                int             `json:"minimum_stock_warning"`
     LastUpdated                 time.Time       `json:"last_updated"`
     Archived                    bool            `json:"archived"`
+    RecommendedMfgPrice         sql.NullFloat64 `json:"recommended_mfg_price"`
 }
 
 type GetManufacturingOrder struct {
-    OrderID                 int                     `json:"order_id"` 
-    ManufactureOrderNumber  string                  `json:"manufacture_order_number"` 
+    OrderID                 int                     `json:"order_id"`
+    ManufactureOrderNumber  string                  `json:"manufacture_order_number"`
     ProductID               int                     `json:"product_id"`
     ProductName             string                  `json:"product_name"`
-    QuantityToManufacture   int                     `json:"quantity_to_manufacture"` 
-    Status                  string                  `json:"status"` 
-    CreatedAt               sql.NullTime            `json:"created_at"` 
+    QuantityToManufacture   int                     `json:"quantity_to_manufacture"`
+    Status                  string                  `json:"status"`
+    CreatedAt               sql.NullTime            `json:"created_at"`
     Archived                bool                    `json:"archived"`
     Recipes                 []ManufacturingRecipe   `json:"recipes"`
 }
@@ -94,13 +91,13 @@ type ManufacturingRecipe struct {
 }
 
 type OptimizedGetManufacturingOrder struct {
-    OrderID                 int                             `json:"order_id"` 
-    ManufactureOrderNumber  string                          `json:"manufacture_order_number"` 
+    OrderID                 int                             `json:"order_id"`
+    ManufactureOrderNumber  string                          `json:"manufacture_order_number"`
     ProductID               int                             `json:"product_id"`
     ProductName             string                          `json:"product_name"`
-    QuantityToManufacture   int                             `json:"quantity_to_manufacture"` 
-    Status                  string                          `json:"status"` 
-    CreatedAt               sql.NullTime                    `json:"created_at"` 
+    QuantityToManufacture   int                             `json:"quantity_to_manufacture"`
+    Status                  string                          `json:"status"`
+    CreatedAt               sql.NullTime                    `json:"created_at"`
     Archived                bool                            `json:"archived"`
     Recipes                 *[]OptimizedManufacturingRecipe `json:"recipes"`
 }
@@ -152,47 +149,59 @@ type GetMaterials struct {
     ItemCode           string  `json:"item_code"`
 }
 
+type GetCustomerSensitive struct {
+    CustomerID                  int             `json:"customer_id"`
+    CustomerName                string          `json:"customer_name"`
+    CustomerBankName            sql.NullString  `json:"customer_bank_name"`
+    CustomerBankAccountNumber   sql.NullString  `json:"customer_bank_account_number"`
+    CustomerCCNumber            sql.NullString  `json:"customer_cc_number"`
+    CustomerAddress             string          `json:"customer_address"`
+    CustomerEmail               sql.NullString  `json:"customer_email"`
+    CustomerPhone               sql.NullString  `json:"customer_phone"`
+    CustomerTaxID               sql.NullString  `json:"customer_tax_id"`
+}
+
+type GetSaleSensitive struct {
+    SalesOrderNumber   string                   `json:"sales_order_number"`
+    ProductName        string                   `json:"product_name"`
+    Quantity           int                      `json:"quantity"`
+    SentQuantity       int                      `json:"sent_quantity"`
+    MfgPricePerUnit    float64                  `json:"mfg_price_per_unit"`
+    SalePriceperUnit   float64                  `json:"sale_price_per_unit"`
+    TaxPercent         float64                  `json:"tax_percent"`
+    Customer           *[]GetCustomerSensitive  `json:"customer"`
+    SalesChannel       string                   `json:"sales_channel"`
+    PaymentMethod      string                   `json:"payment_method"`
+    PaymentStatus      string                   `json:"payment_status"`
+    DeliveryStatus     string                   `json:"delivery_status"`
+    IsCanceled         bool                     `json:"is_canceled"`
+    OrderDate          time.Time                `json:"order_date"`
+    PaymentDate        sql.NullTime             `json:"payment_date"`
+    DeliveryDate       sql.NullTime             `json:"delivery_date"`
+}
+
+type GetCustomer struct {
+    CustomerID      int     `json:"customer_id"`
+    CustomerName    string  `json:"customer_name"`
+}
+
+type GetSale struct {
+    SalesOrderNumber   string           `json:"sales_order_number"`
+    ProductName        string           `json:"product_name"`
+    Quantity           int              `json:"quantity"`
+    SentQuantity       int              `json:"sent_quantity"`
+    MfgPricePerUnit    float64          `json:"mfg_price_per_unit"`
+    SalePriceperUnit   float64          `json:"sale_price_per_unit"`
+    TaxPercent         float64          `json:"tax_percent"`
+    Customer           *[]GetCustomer   `json:"customer"`
+    SalesChannel       string           `json:"sales_channel"`
+    PaymentMethod      string           `json:"payment_method"`
+    PaymentStatus      string           `json:"payment_status"`
+    DeliveryStatus     string           `json:"delivery_status"`
+    IsCanceled         bool             `json:"is_canceled"`
+    OrderDate          time.Time        `json:"order_date"`
+    PaymentDate        sql.NullTime     `json:"payment_date"`
+    DeliveryDate       sql.NullTime     `json:"delivery_date"`
+}
+
 // ======================================================================================== //
-
-
-
-
-type Sale struct {
-    SaleID           int       `json:"sale_id"` 
-    SalesOrderNumber string    `json:"sales_order_number"` 
-    ItemID           int       `json:"item_id"`
-    Quantity         int       `json:"quantity"` 
-    SalePricePerUnit float64   `json:"sale_price_per_unit"` 
-    SaleStatus       string    `json:"sale_status"` 
-    SaleDate         time.Time `json:"sale_date"` 
-    Archived         bool      `json:"archived"`
-}
-
-type Purchase struct {
-    PurchaseID           int       `json:"purchase_id"` 
-    PurchaseOrderNumber  string    `json:"purchase_order_number"` 
-    ItemID               int       `json:"item_id"`
-    Quantity             int       `json:"quantity"` 
-    PurchasePricePerUnit float64   `json:"purchase_price_per_unit"` 
-    PurchaseStatus       string    `json:"purchase_status"` 
-    PurchaseDate         time.Time `json:"purchase_date"` 
-    Archived             bool      `json:"archived"`
-}
-
-type Income struct {
-    IncomeID     int       `json:"income_id"` 
-    SaleID       int       `json:"sale_id"`
-    Amount       float64   `json:"amount"` 
-    Currency     string    `json:"currency"` 
-    ReceivedDate time.Time `json:"received_date"` 
-    Archived     bool      `json:"archived"`
-}
-
-type Outcome struct {
-    OutcomeID    int       `json:"outcome_id"` 
-    PurchaseID   int       `json:"purchase_id"`
-    Amount       float64   `json:"amount"` 
-    Currency     string    `json:"currency"` 
-    SpentDate    time.Time `json:"spent_date"` 
-    Archived     bool      `json:"archived"`
-}

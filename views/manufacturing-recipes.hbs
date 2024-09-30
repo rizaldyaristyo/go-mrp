@@ -106,36 +106,38 @@
                     `;
 
                     const selectElement = document.getElementById('recipes-space-' + productRecipe['product_id']);
-                    productRecipe['recipes'].forEach((recipe, index2) => {
-                        let div = document.createElement('div');
-                        div.className = 'mb-3';
-                        div.innerHTML = `
-                            <div class="mb-3">
-                                <h5 class="text-muted">Material ${index}-${index2+1}</h5>
-                            </div>
-                            <div class="mb-3 ms-3 me-5">
-                                <label for="recipe-material-name-${index}-${index2+1}" class="form-label">Material Name</label>
-                                <select class="form-select" id="recipe-material-name-${index}-${index2+1}" name="recipe-material-name-${index}-${index2+1}" required>
-                                    <option value="${recipe['material_id']['Int64']}" selected>${recipe['material_name']['String']} - ${recipe['material_inventory_code']['String']} (Current)</option>
-                                    {{!-- to be filled by js --}}
-                                </select>
-                            </div>
-                            <div class="mb-3 ms-3 me-5">
-                                <label for="recipe-material-quantity-to-produce-one-${index}-${index2+1}" class="form-label">Quantity Needed to Produce</label>
-                                <input type="number" class="form-control" id="recipe-material-quantity-to-produce-one-${index}-${index2+1}" name="recipe-material-quantity-to-produce-one-${index}-${index2+1}" value="${recipe['material_quantity_to_produce_one']['Int64']}" required>
-                            </div>
-                            <hr/>
-                        `;
-                        selectElement.appendChild(div);
-                        let selectRecipeMaterialNameElement = document.getElementById('recipe-material-name-' + (index) + "-" + (index2+1));
-                        materials.forEach((material) => {
-                            let option = document.createElement('option');
-                            option.value = material['inventory_id'];
-                            option.text = material['item_name'] + " - " + material['item_code'];
-                            option.id = material['item_code']+material['inventory_id'];
-                            selectRecipeMaterialNameElement.appendChild(option);
-                        })
-                    });
+                    if (productRecipe['recipes'] != null) {
+                        productRecipe['recipes'].forEach((recipe, index2) => {
+                            let div = document.createElement('div');
+                            div.className = 'mb-3';
+                            div.innerHTML = `
+                                <div class="mb-3">
+                                    <h5 class="text-muted">Material ${index}-${index2+1}</h5>
+                                </div>
+                                <div class="mb-3 ms-3 me-5">
+                                    <label for="recipe-material-name-${index}-${index2+1}" class="form-label">Material Name</label>
+                                    <select class="form-select" id="recipe-material-name-${index}-${index2+1}" name="recipe-material-name-${index}-${index2+1}" required>
+                                        <option value="${recipe['material_id']['Int64']}" selected>${recipe['material_name']['String']} - ${recipe['material_inventory_code']['String']} (Current)</option>
+                                        {{!-- to be filled by js --}}
+                                    </select>
+                                </div>
+                                <div class="mb-3 ms-3 me-5">
+                                    <label for="recipe-material-quantity-to-produce-one-${index}-${index2+1}" class="form-label">Quantity Needed to Produce</label>
+                                    <input type="number" class="form-control" id="recipe-material-quantity-to-produce-one-${index}-${index2+1}" name="recipe-material-quantity-to-produce-one-${index}-${index2+1}" value="${recipe['material_quantity_to_produce_one']['Int64']}" required>
+                                </div>
+                                <hr/>
+                            `;
+                            selectElement.appendChild(div);
+                            let selectRecipeMaterialNameElement = document.getElementById('recipe-material-name-' + (index) + "-" + (index2+1));
+                            materials.forEach((material) => {
+                                let option = document.createElement('option');
+                                option.value = material['inventory_id'];
+                                option.text = material['item_name'] + " - " + material['item_code'];
+                                option.id = material['item_code']+material['inventory_id'];
+                                selectRecipeMaterialNameElement.appendChild(option);
+                            })
+                        });
+                    }
                     let div = document.createElement('div');
                     div.className = 'text-center mb-3';
                     div.innerHTML = `
