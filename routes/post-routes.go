@@ -30,6 +30,10 @@ func PostRoutes(app *fiber.App) {
 	app.Post("/api/GetMaterials", middleware.JWTMiddleware, middleware.RoleMiddleware("Manufacturing", 1), handlers.GetMaterials)
 	app.Post("/api/GetSales", middleware.JWTMiddleware, middleware.RoleMiddleware("Sales", 1), handlers.GetSales)
 	app.Post("/api/GetSalesSensitive", middleware.JWTMiddleware, middleware.RoleMiddleware("Sales", 2), handlers.GetSalesSensitive)
+	app.Post("/api/GetSalesSensitive2", middleware.JWTMiddleware, middleware.RoleMiddleware("Sales", 2), handlers.OptimizedGetSalesSensitive)
+	app.Post("/api/GetCustomers", middleware.JWTMiddleware, middleware.RoleMiddleware("Sales", 2), handlers.GetCustomers)
+	app.Post("/api/EditSales/:sales_order_id", middleware.JWTMiddleware, middleware.RoleMiddleware("Sales", 2), handlers.EditSales)
+	// app.Post("/api/EditSales/:sales_order_id", middleware.JWTMiddleware, middleware.RoleMiddleware("Sales", 2), handlers.GetAllPostFormInputs)
 	
 	// DEV
 	app.Post("/dev/GetJWT", handlers.DevGetJWT)
@@ -42,4 +46,6 @@ func PostRoutes(app *fiber.App) {
 	app.Get("/api/GetMaterials", middleware.JWTMiddleware, middleware.RoleMiddleware("Manufacturing", 1), handlers.GetMaterials)
 	app.Get("/api/GetSales", middleware.JWTMiddleware, middleware.RoleMiddleware("Sales", 1), handlers.GetSales)
 	app.Get("/api/GetSalesSensitive", middleware.JWTMiddleware, middleware.RoleMiddleware("Sales", 2), handlers.GetSalesSensitive)
+	app.Get("/api/GetSalesSensitive2", middleware.JWTMiddleware, middleware.RoleMiddleware("Sales", 2), handlers.OptimizedGetSalesSensitive)
+	app.Get("/api/GetCustomers", middleware.JWTMiddleware, middleware.RoleMiddleware("Sales", 2), handlers.GetCustomers)
 }

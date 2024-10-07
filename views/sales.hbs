@@ -5,50 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales</title>
 </head>
-<style>
-    main {
-        margin: 1%;
-    }
-</style>
 <body>
     <!-- load header from partials -->
     {{> 'partials/header' }}
-    <main>
+    <main class="m-3">
         <h1>Sales</h1>
         <h3>Level: {{permission_val}}</h3>
         <a href="/dashboard">Back to Dashboard</a>
         {{!-- <section id="stock-forecast">
             <canvas id="stock-forecast-chart" class="charts"></canvas>
         </section> --}}
-        <section id="recipe-list">
+        <section id="sales-list">
             <div style="overflow-x:auto">
-                <input type="text" id="search-bar" onkeyup="searchRecipe()" placeholder="Search for names..">
-                <table class="table" id="recipeTable">
+                <input type="text" id="search-bar" onkeyup="searchSales()" placeholder="Search Sales Order Number..." size="26">
+                <table class="table" id="salesTable">
                     <thead>
                         <tr>
                             <th scope="col">Sales Order Number</th>
-                            <th scope="col">Sales Order Number</th>
-                            <th scope="col">Product Name</th>
-                            <th scope="col">Quantity</th>
-                            {{!-- <th scope="col">Sent Quantity</th> --}}
-                            {{!-- <th scope="col">Mfg. Price per Unit</th> --}}
-                            <th scope="col">Sale Price per Unit</th>
-                            {{!-- <th scope="col">Tax (%)</th> --}}
                             <th scope="col">Customer Name</th>
-                            {{!-- <th scope="col">Sales Channel</th> --}}
-                            {{!-- <th scope="col">Payment Method</th> --}}
+                            <th scope="col">Item Var.</th>
                             <th scope="col">Payment Status</th>
                             <th scope="col">Delivery Status</th>
-                            {{!-- <th scope="col">Status</th> --}}
-                            {{!-- <th scope="col">Order Date</th> --}}
-                            {{!-- <th scope="col">Payment Date</th> --}}
-                            {{!-- <th scope="col">Delivery Date</th> --}}
                             <th scope="col">Action</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <td colspan="3" class="text-center"><i>No Data</i></td>
+                            <td colspan="8" class="text-center"><i>No Data</i></td>
                         </tr>
                     </tbody>
                 </table>
@@ -63,157 +46,235 @@
 </body>
 </html>
 <script>
-    let globalMaterials;
     async function updateTable() {
-        const materialResponse = await fetch('/api/GetMaterials', { method: 'POST' });
-        materials = await materialResponse.json();
-        globalMaterials = materials;
-        var recipeTableBody = document.querySelector('#recipeTable tbody');
+        var salesTableBody = document.querySelector('#salesTable tbody');
         var hiddenModals = document.querySelector('#hiddenModals');
+        var getCustomers = await fetch('/api/GetCustomers', { method: 'POST' });
+        customers = await getCustomers.json();
         const permission_int = {{permission_int}};
-        fetch('/api/GetRecipes', { method: 'POST' })
+        fetch({{permission_int}} < 2 ? '/api/GetSales' : '/api/GetSalesSensitive2', { method: 'POST' })
             .then((res) => res.json())
                         .then((data) => {
-                recipeTableBody.innerHTML = '';
-                data.forEach((productRecipe, index) => {
+                salesTableBody.innerHTML = '';
+                data.forEach((getSales, index) => {
                     var row = document.createElement('tr');
                     row.setAttribute('class', 'search-target');
                     row.innerHTML = `
-                        <td>${productRecipe['product_name']}</td>
-                        <td>${productRecipe['inventory_code']}</td>
+                        <td>${getSales['sales_order_number']}</td>
+                        <td>${getSales['customer']['customer_name']}</td>
+                        <td>${getSales['products'].length}</td>
+                        <td>${getSales['payment_status']}</td>
+                        <td>${getSales['delivery_status']}</td>
                         <td>
-                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-edit-recipe-${productRecipe['product_id']}" ${permission_int < 2 ? 'disabled' : ''}>View Recipe</button>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal-edit-sales-${getSales['sales_order_number']}" ${permission_int < 2 ? 'disabled' : ''}>View Details</button>
+                            <button class="btn btn-success" onclick="window.open('/api/PrintReceipt/${getSales['sales_order_number']}', '_blank')" ${permission_int < 2 ? 'disabled' : ''}>Print Receipt</button>
                         </td>
-                        <td style="display: none">${productRecipe['product_id']}</td>
+                        <td style="display: none">${getSales['sales_order_number']}</td>
                     `;
-                    recipeTableBody.appendChild(row);
+                    salesTableBody.appendChild(row);
 
                     hiddenModals.innerHTML += `
-                        <div class="modal fade" id="modal-edit-recipe-${productRecipe['product_id']}" tabindex="-1" role="dialog" aria-labelledby="modal-edit-recipe-${productRecipe['product_id']}Label" aria-hidden="true">
-                            <div class="modal-dialog">
+                        <div class="modal fade" id="modal-edit-sales-${getSales['sales_order_number']}" tabindex="-1" role="dialog" aria-labelledby="modal-edit-sales-${getSales['sales_order_number']}Label" aria-hidden="true">
+                            <div class="modal-dialog modal-xl">
                                 <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h1 class="modal-title fs-5" id="modal-header-edit-${productRecipe['product_id']}Label">Edit Recipe</h1>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <form action="/api/EditRecipe/${productRecipe['product_id']}" method="POST">
-                                        <div class="modal-body">
+                                    <form action="/api/EditSales/${getSales['sales_order_number']}" method="POST">
+                                        <div class="modal-header">
+                                            <h1 class="modal-title fs-5" id="modal-header-edit-${getSales['sales_order_number']}Label">Edit Sales</h1>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                            <div class="modal-body">
                                                 <div class="mb-3">
-                                                    <span>Product</span>
-                                                    <h3>${productRecipe['product_name']}</h3>
+                                                    <h2>Sale - ${getSales['sales_order_number']}</h2>
                                                 </div>
-                                                <hr>
-                                                <div id="recipes-space-${productRecipe['product_id']}">
-                                                    {{!-- to be filled by js --}}
+                                                <div>
+                                                    Products:
                                                 </div>
-                                                <div id="new-material-space-${productRecipe['product_id']}">
-                                                    {{!-- to be filled by js --}}
+                                                <div class="mb-3">
+                                                    <div class="d-flex">
+                                                        <div class="p-2">
+                                                            <table class="table" id="table-details-${getSales['sales_order_number']}">
+                                                                <thead>
+                                                                    <tr class="table-primary">
+                                                                        <th scope="col">Product Name</th>
+                                                                        <th scope="col">Quantity Ordered</th>
+                                                                        <th scope="col">Sent Quantity</th>
+                                                                        <th scope="col">Mfg. Price/1</th>
+                                                                        <th scope="col">Sale Price/1</th>
+                                                                        <th scope="col">Total Mfg. Price</th>
+                                                                        <th scope="col">Total Sale Price</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        {{!-- To be filled by JS --}}
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                        <div class="p-2 mb-3">
+                                                            <div class="mb-3">
+                                                                <h5>Delivery Status:</h5>
+                                                                    <span class="badge ${getSales['delivery_status'] == 'Delivered' ? 'text-bg-success' : 'text-bg-danger'}">${getSales['delivery_status']}</span>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <h5>Payment Status:</h5>
+                                                                <select name="payment_status" class="form-select" id="payment-status-${getSales['sales_order_number']}" required>
+                                                                    <option value="Paid" ${getSales['payment_status'] == 'Paid' ? 'selected' : ''}>Paid</option>
+                                                                    <option value="Paid Partially" ${getSales['payment_status'] == 'Paid Partially' ? 'selected' : ''}>Paid Partially</option>
+                                                                    <option value="Pending" ${getSales['payment_status'] == 'Pending' ? 'selected' : ''}>Pending</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                        </div>
+                                                <div>
+                                                    <div class="mb-3">
+                                                        <div class="mt-1">
+                                                            Sales Channel:
+                                                            <div class="mb-2 ms-2">
+                                                                <input type="radio" name="sales_channel" value="Online" ${getSales['sales_channel'] == 'Online' ? 'checked' : ''}> Online ${getSales['sales_channel'] == 'Online' ? '(Existing)' : ''}
+                                                                <input type="radio" name="sales_channel" value="In-Store" ${getSales['sales_channel'] == 'In-Store' ? 'checked' : ''}> In-Store ${getSales['sales_channel'] == 'In-Store' ? '(Existing)' : ''}
+                                                                <input type="radio" name="sales_channel" value="Distributor" ${getSales['sales_channel'] == 'Distributor' ? 'checked' : ''}> Distributor ${getSales['sales_channel'] == 'Distributor' ? '(Existing)' : ''}
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-1">
+                                                            Payment Method:
+                                                            <div class="mb-2 ms-2">
+                                                                <input type="radio" name="payment_method" value="Cash" ${getSales['payment_method'] == 'Cash' ? 'checked' : ''}> Cash ${getSales['payment_method'] == 'Cash' ? '(Existing)' : ''}
+                                                                <input type="radio" name="payment_method" value="Credit Card" ${getSales['payment_method'] == 'Credit Card' ? 'checked' : ''}> Credit Card ${getSales['payment_method'] == 'Credit Card' ? '(Existing)' : ''}
+                                                                <input type="radio" name="payment_method" value="Bank Transfer" ${getSales['payment_method'] == 'Bank Transfer' ? 'checked' : ''}> Bank Transfer ${getSales['payment_method'] == 'Bank Transfer' ? '(Existing)' : ''}
+                                                            </div>
+                                                        </div>
+                                                        <div class="mt-1">
+                                                            Change Customer:
+                                                            <select name="customer_id" id="customer-selector-${getSales['sales_order_number']}" class="form-select mt-1 ms-2 mb-3" style="width: 23ch" required>
+                                                                {{!-- To be filled by JS --}}
+                                                            </select>
+                                                            Existing Customer: ${getSales['customer']['customer_name']}<br>
+                                                        </div>
+                                                        <div class="mt-1 ms-2">
+                                                            <div class="mb-1">
+                                                                <button class="btn btn-danger" type="button" data-bs-toggle="collapse" data-bs-target="#sensitive-collapsible-${getSales['sales_order_number']}" aria-expanded="false" aria-controls="sensitive-collapsible-${getSales['sales_order_number']}">
+                                                                    Toggle Sensitive Data
+                                                                </button>
+                                                            </div>
+                                                            <div class="mb-1">
+                                                                <div class="collapse" id="sensitive-collapsible-${getSales['sales_order_number']}">
+                                                                    <div class="card card-body">
+                                                                        Bank Name: ${getSales['customer']['customer_bank_name']['String']}<br>
+                                                                        Bank Account: ${getSales['customer']['customer_bank_account_number']['String']}<br>
+                                                                        CC Number: ${getSales['customer']['customer_cc_number']['String']}<br>
+                                                                        Address: ${getSales['customer']['customer_address']}<br>
+                                                                        E-Mail: ${getSales['customer']['customer_email']['String']}<br>
+                                                                        Phone: ${getSales['customer']['customer_phone']['String']}<br>
+                                                                        Tax ID: ${getSales['customer']['customer_tax_id']['String']}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
                                         <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                            <input type="submit" class="btn btn-primary" value="Save Changes">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <input type="submit" class="btn btn-primary" value="Save Changes" ${permission_int < 2 ? 'disabled' : ''}>
                                         </div>
-                                    </form> 
+                                    </form>
                                 </div>
                             </div>
                         </div>
                     `;
 
-                    const selectElement = document.getElementById('recipes-space-' + productRecipe['product_id']);
-                    productRecipe['recipes'].forEach((recipe, index2) => {
-                        let div = document.createElement('div');
-                        div.className = 'mb-3';
-                        div.innerHTML = `
-                            <div class="mb-3">
-                                <h5 class="text-muted">Material ${index}-${index2+1}</h5>
-                            </div>
-                            <div class="mb-3 ms-3 me-5">
-                                <label for="recipe-material-name-${index}-${index2+1}" class="form-label">Material Name</label>
-                                <select class="form-select" id="recipe-material-name-${index}-${index2+1}" name="recipe-material-name-${index}-${index2+1}" required>
-                                    <option value="${recipe['material_id']['Int64']}" selected>${recipe['material_name']['String']} - ${recipe['material_inventory_code']['String']} (Current)</option>
-                                    {{!-- to be filled by js --}}
-                                </select>
-                            </div>
-                            <div class="mb-3 ms-3 me-5">
-                                <label for="recipe-material-quantity-to-produce-one-${index}-${index2+1}" class="form-label">Quantity Needed to Produce</label>
-                                <input type="number" class="form-control" id="recipe-material-quantity-to-produce-one-${index}-${index2+1}" name="recipe-material-quantity-to-produce-one-${index}-${index2+1}" value="${recipe['material_quantity_to_produce_one']['Int64']}" required>
-                            </div>
-                            <hr/>
-                        `;
-                        selectElement.appendChild(div);
-                        let selectRecipeMaterialNameElement = document.getElementById('recipe-material-name-' + (index) + "-" + (index2+1));
-                        materials.forEach((material) => {
-                            let option = document.createElement('option');
-                            option.value = material['inventory_id'];
-                            option.text = material['item_name'] + " - " + material['item_code'];
-                            option.id = material['item_code']+material['inventory_id'];
-                            selectRecipeMaterialNameElement.appendChild(option);
-                        })
+                    const customerSelector = document.querySelector(`#customer-selector-${getSales['sales_order_number']}`);
+                    customers.forEach((customer) => {
+                        customerSelector.innerHTML += `
+                            <option value="${customer['customer_id']}" ${getSales['customer']['customer_id'] == customer['customer_id'] ? 'selected' : ''}>${customer['customer_name']}</option>
+                        `
                     });
-                    let div = document.createElement('div');
-                    div.className = 'text-center mb-3';
-                    div.innerHTML = `
-                        <div>
-                            <button type="button" class="btn btn-primary" onclick="addRecipe(${productRecipe['product_id']})">Add New Material</button>
-                        </div>
-                        `;
-                    selectElement.appendChild(div);
+
+                    const selectSalesOrderTableTBody = document.querySelector(`#table-details-${getSales['sales_order_number']} tbody`);
+                    let total_vertical_mfg_price = 0;
+                    let total_vertical_sale_price = 0;
+                    getSales['products'].forEach((product) => {
+                        selectSalesOrderTableTBody.innerHTML += `
+                            <tr>
+                                <td>${product['product_name']}</td>
+                                <td id="product-quantity-${product['product_id']}-${getSales['sales_order_number']}">${product['quantity']}</td>
+                                <td class="input-group" >
+                                    <input type="hidden" id="product-id-${product['product_id']}-${getSales['sales_order_number']}" name="product-id-${product['product_id']}-${getSales['sales_order_number']}" value="${product['product_id']}" required>
+                                    <input type="hidden" id="quantity-${product['product_id']}-${getSales['sales_order_number']}" name="quantity-${product['product_id']}-${getSales['sales_order_number']}" value="${product['quantity']}" required>
+                                    <input type="number" max="${product['quantity']}" min="0" class="border border-top-0 border-start-0 border-end-0" id="sent-quantity-${product['product_id']}-${getSales['sales_order_number']}" name="sent-quantity-${product['product_id']}-${getSales['sales_order_number']}" value="${product['sent_quantity']}" required>
+                                </td>
+                                <td class="text-body-tertiary">Rp. ${product['mfg_price_per_unit']}</td>
+                                <td>
+                                    Rp. <input type="number" max="999999" min="0" class="border border-top-0 border-start-0 border-end-0" id="sale-price-${product['product_id']}-${getSales['sales_order_number']}" name="sale-price-${product['product_id']}-${getSales['sales_order_number']}" value="${product['sale_price_per_unit']}" data-default-value="${product['sale_price_per_unit']}" {{!-- onkeyup="reCalculateTotal(${product['product_id']}, ${getSales['sales_order_number']})" --}} required> {{!-- TODO: Live Calc --}}
+                                </td>
+                                <td class="text-body-tertiary">Rp. ${product['mfg_price_per_unit'] * product['quantity']}</td>
+                                <td>
+                                    <b>Rp.</b>
+                                    <b id="total-${product['product_id']}-${getSales['sales_order_number']}">
+                                        ${product['sale_price_per_unit'] * product['quantity']}
+                                    </b>
+                                </td>
+                            </tr>
+                        `
+                        total_vertical_mfg_price += product['mfg_price_per_unit'] * product['quantity'];
+                        total_vertical_sale_price += product['sale_price_per_unit'] * product['quantity'];
+                    })
+                    selectSalesOrderTableTBody.innerHTML += `
+                        <tr class="table-info">
+                            <td colspan="5" class="text-center"><b>TOTAL</b></td>
+                            <td>
+                                <b id="total-vertical-mfg-${getSales['sales_order_number']}">Rp. ${total_vertical_mfg_price}</b>
+                            </td>
+                            <td>
+                                <b id="total-vertical-sale-${getSales['sales_order_number']}">Rp. ${total_vertical_sale_price}</b>
+                            </td>
+                        </tr>
+                        <tr class="table-info">
+                            <td colspan="5" class="text-center"><b>After Tax</b></td>
+                            <td>
+                                <input type="number" step="0.1" max="100" style="width: 7ch" class="bg-transparent border border-top-0 border-start-0 border-end-0 border-black" id="total-tax-${getSales['sales_order_number']}" name="total-tax-${getSales['sales_order_number']}" value="${getSales['tax_percent']}">%
+                            </td>
+                            <td>
+                                <b id="total-vertical-sale-${getSales['sales_order_number']}">Rp. ${total_vertical_sale_price}</b>
+                            </td>
+                        </tr>
+                    `
                 });
             });
     }
 
+    {{!-- function reCalculateTotal(product_id, sales_order_number) {
+        var orderedQuantity = document.querySelector(`#product-quantity-${product_id}-${sales_order_number}`).textContent;
+        var formerPrice = document.querySelector(`#sale-price-${product_id}-${sales_order_number}`).getAttribute('data-default-value');
+        var newPrice = document.querySelector(`#sale-price-${product_id}-${sales_order_number}`).value;
+        var currentVerticalSalePrice = document.querySelector(`#total-${product_id}-${sales_order_number}`).textContent;
 
-    var recipeCounter = 0;
-    function addRecipe(product_id) {
-        recipeCounter++;
-        let div = document.createElement('div');
-        div.className = 'mb-3';
-        div.id = `new-recipe-material-${recipeCounter}`
-        div.innerHTML = `
-            <div class="mb-3">
-                <h5 class="text-muted"><button type="button" class="btn-close" onclick="deleteNewRecipe(${recipeCounter})" aria-label="Close"></button>New Material ${recipeCounter}</h5>
-            </div>
-            <div class="mb-3 ms-3 me-5">
-                <label for="recipe-material-name-${recipeCounter}" class="form-label">Material Name</label>
-                <select class="form-select" id="new-recipe-material-name-${recipeCounter}" name="recipe-material-name-${recipeCounter}" required>
-                    {{!-- to be filled by js --}}
-                </select>
-            </div>
-            <div class="mb-3 ms-3 me-5">
-                <label for="recipe-material-quantity-to-produce-one-${recipeCounter}" class="form-label">Quantity Needed to Produce</label>
-                <input type="number" class="form-control" id="new-recipe-material-quantity-to-produce-one-${recipeCounter}" name="recipe-material-quantity-to-produce-one-${recipeCounter}" required>
-            </div>
-            <hr/>
-        `;
-        document.getElementById('new-material-space-'+product_id).appendChild(div);
-    }
+        var formerPriceTotal = formerPrice * orderedQuantity;
+        var newPriceTotal = newPrice * orderedQuantity;
+        var newVerticalSalePrice = currentVerticalSalePrice - formerPriceTotal + newPriceTotal;
+        document.querySelector(`#total-${product_id}-${sales_order_number}`).textContent = newPriceTotal;
+        document.querySelector(`#total-vertical-sale-${sales_order_number}`).textContent = newVerticalSalePrice;
+    } --}} {{!-- TODO: Live ReCalc --}}
 
-    function deleteNewRecipe(product_id) {
-        document.getElementById(`new-recipe-material-${recipeCounter}`).remove();
-        recipeCounter--;
-        if (recipeCounter == 0) {
-            document.getElementById(`new-material-space-${product_id}`).innerHTML = '';
-        }
-    }
-
-    function searchRecipe() {
+    function searchSales() {
         var input, filter, table, tr, td, i, txtValue;
         input = document.getElementById("search-bar");
         filter = input.value.toUpperCase();
-        table = document.getElementById("recipeTable");
+        table = document.getElementById("salesTable");
         tr = table.getElementsByTagName("tr");
         for (i = 0; i < tr.length; i++) {
             td = tr[i].getElementsByTagName("td")[0];
             if (td) {
-            txtValue = td.textContent || td.innerText;
-            if (txtValue.toUpperCase().indexOf(filter) > -1) {
-                tr[i].style.display = "";
-            } else {
-                tr[i].style.display = "none";
-            }
+                txtValue = td.textContent || td.innerText;
+                if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                    tr[i].style.display = "";
+                } else {
+                    tr[i].style.display = "none";
+                }
             }     
-                    }
+        }
     }
 
     updateTable();

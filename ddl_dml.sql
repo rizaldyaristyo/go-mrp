@@ -79,7 +79,7 @@ CREATE TABLE customers (
 
 CREATE TABLE sales (
     sale_id INT AUTO_INCREMENT PRIMARY KEY,
-    sales_order_number VARCHAR(50) UNIQUE NOT NULL,
+    sales_order_number VARCHAR(50) NOT NULL,
     item_id INT,
     quantity INT NOT NULL,
     sent_quantity INT DEFAULT 0, -- Tracks how much has been delivered
@@ -110,26 +110,6 @@ CREATE TABLE purchases (
     purchase_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     archived BOOLEAN DEFAULT FALSE, -- Soft delete flag
     FOREIGN KEY (item_id) REFERENCES inventory(inventory_id)
-);
-
-CREATE TABLE income (
-    income_id INT AUTO_INCREMENT PRIMARY KEY,
-    sale_id INT,
-    amount DECIMAL(10, 2) NOT NULL,
-    currency VARCHAR(5) DEFAULT 'IDR',
-    received_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    archived BOOLEAN DEFAULT FALSE, -- Soft delete flag
-    FOREIGN KEY (sale_id) REFERENCES sales(sale_id)
-);
-
-CREATE TABLE outcome (
-    outcome_id INT AUTO_INCREMENT PRIMARY KEY,
-    purchase_id INT,
-    amount DECIMAL(10, 2) NOT NULL,
-    currency VARCHAR(5) DEFAULT 'IDR',
-    spent_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    archived BOOLEAN DEFAULT FALSE, -- Soft delete flag
-    FOREIGN KEY (purchase_id) REFERENCES purchases(purchase_id)
 );
 
 INSERT INTO users (user_id, username, password, email, permission_val, archived)
@@ -175,20 +155,15 @@ VALUES
 ('SO002', 3, 30, 30, 300.00, 10.00, 2, 'In-Store', 'Cash', 'Paid', 'Delivered', FALSE, '2024-09-02 15:30:00', '2024-09-02 15:30:00'),
 ('SO004', 2, 10, 0, 50.00, 10.00, 3, 'Online', 'Credit Card', 'Pending', 'Delivered', FALSE, NULL, NULL),
 ('SO005', 4, 5, 5, 100.00, 10.00, 2, 'In-Store', 'Cash', 'Paid', 'Delivered', FALSE, '2024-09-03 13:45:00', '2024-09-03 14:00:00'),
-('SO006', 1, 100, 0, 10.00, 10.00, 1, 'Online', 'Credit Card', 'Pending', 'Delivered', TRUE, NULL, NULL);
+('SO006', 1, 100, 0, 10.00, 10.00, 1, 'Online', 'Credit Card', 'Pending', 'Delivered', TRUE, NULL, NULL),
+('SO001', 2, 50, 0, 300.00, 10.00, 1, 'Online', 'Credit Card', 'Pending', 'Delivered', FALSE, NULL, NULL),
+('SO002', 2, 30, 30, 300.00, 10.00, 2, 'In-Store', 'Cash', 'Paid', 'Delivered', FALSE, '2024-09-02 15:30:00', '2024-09-02 15:30:00'),
+('SO004', 1, 10, 0, 50.00, 10.00, 3, 'Online', 'Credit Card', 'Pending', 'Delivered', FALSE, NULL, NULL),
+('SO005', 3, 5, 5, 100.00, 10.00, 2, 'In-Store', 'Cash', 'Paid', 'Delivered', FALSE, '2024-09-03 13:45:00', '2024-09-03 14:00:00'),
+('SO006', 4, 100, 0, 10.00, 10.00, 1, 'Online', 'Credit Card', 'Pending', 'Delivered', TRUE, NULL, NULL);
 
 INSERT INTO purchases (purchase_order_number, item_id, quantity, purchase_price_per_unit, purchase_status)
 VALUES
 ('PO001', 1, 500, 300, 'Ordered'),
 ('PO002', 2, 200, 300, 'Received'),
 ('PO003', 4, 50, 300, 'Cancelled');
-
-INSERT INTO income (sale_id, amount, currency, received_date)
-VALUES
-(2, 6600.00, 'IDR', '2024-09-01 10:00:00'),
-(3, 4400.00, 'IDR', '2024-09-02 15:30:00');
-
-INSERT INTO outcome (purchase_id, amount, currency, spent_date)
-VALUES
-(1, 5000.00, 'IDR', '2024-09-03 09:00:00'),
-(2, 10000.00, 'IDR', '2024-09-04 13:45:00');

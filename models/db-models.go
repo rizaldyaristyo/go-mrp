@@ -149,6 +149,27 @@ type GetMaterials struct {
     ItemCode           string  `json:"item_code"`
 }
 
+type GetSaleSensitive struct {
+    SalesOrderNumber   string                   `json:"sales_order_number"`
+    ProductName        string                   `json:"product_name"`
+    Quantity           int                      `json:"quantity"`
+    SentQuantity       int                      `json:"sent_quantity"`
+    MfgPricePerUnit    float64                  `json:"mfg_price_per_unit"`
+    SalePriceperUnit   float64                  `json:"sale_price_per_unit"`
+    TaxPercent         float64                  `json:"tax_percent"`
+    Customer           GetCustomerSensitive     `json:"customer"`
+    SalesChannel       string                   `json:"sales_channel"`
+    PaymentMethod      string                   `json:"payment_method"`
+    PaymentStatus      string                   `json:"payment_status"`
+    DeliveryStatus     string                   `json:"delivery_status"`
+    IsCanceled         bool                     `json:"is_canceled"`
+    OrderDate          time.Time                `json:"order_date"`
+    PaymentDate        sql.NullTime             `json:"payment_date"`
+    DeliveryDate       sql.NullTime             `json:"delivery_date"`
+}
+
+//=======================================================================================
+
 type GetCustomerSensitive struct {
     CustomerID                  int             `json:"customer_id"`
     CustomerName                string          `json:"customer_name"`
@@ -161,15 +182,20 @@ type GetCustomerSensitive struct {
     CustomerTaxID               sql.NullString  `json:"customer_tax_id"`
 }
 
-type GetSaleSensitive struct {
-    SalesOrderNumber   string                   `json:"sales_order_number"`
+type OptimizedGetSalesProduct struct {
+    ProductID          string                   `json:"product_id"`
     ProductName        string                   `json:"product_name"`
     Quantity           int                      `json:"quantity"`
     SentQuantity       int                      `json:"sent_quantity"`
     MfgPricePerUnit    float64                  `json:"mfg_price_per_unit"`
     SalePriceperUnit   float64                  `json:"sale_price_per_unit"`
+}
+
+type OptimizedGetSaleSensitive struct {
+    SalesOrderNumber   string                   `json:"sales_order_number"`
+    Products           []OptimizedGetSalesProduct  `json:"products"`
     TaxPercent         float64                  `json:"tax_percent"`
-    Customer           *[]GetCustomerSensitive  `json:"customer"`
+    Customer           GetCustomerSensitive     `json:"customer"`
     SalesChannel       string                   `json:"sales_channel"`
     PaymentMethod      string                   `json:"payment_method"`
     PaymentStatus      string                   `json:"payment_status"`
@@ -179,6 +205,8 @@ type GetSaleSensitive struct {
     PaymentDate        sql.NullTime             `json:"payment_date"`
     DeliveryDate       sql.NullTime             `json:"delivery_date"`
 }
+
+// ======================================================================================== //
 
 type GetCustomer struct {
     CustomerID      int     `json:"customer_id"`
@@ -193,7 +221,7 @@ type GetSale struct {
     MfgPricePerUnit    float64          `json:"mfg_price_per_unit"`
     SalePriceperUnit   float64          `json:"sale_price_per_unit"`
     TaxPercent         float64          `json:"tax_percent"`
-    Customer           *[]GetCustomer   `json:"customer"`
+    Customer           GetCustomer      `json:"customer"`
     SalesChannel       string           `json:"sales_channel"`
     PaymentMethod      string           `json:"payment_method"`
     PaymentStatus      string           `json:"payment_status"`
@@ -203,5 +231,3 @@ type GetSale struct {
     PaymentDate        sql.NullTime     `json:"payment_date"`
     DeliveryDate       sql.NullTime     `json:"delivery_date"`
 }
-
-// ======================================================================================== //

@@ -376,7 +376,6 @@ func GetRecipes(c *fiber.Ctx) error {
 			ON mr.material_inventory_id = inv_material.inventory_id
 		WHERE inv_product.manufacturable = "1"
 		ORDER BY inv_product.item_name, inv_material.item_name;
-
 	`)
 
 	if err != nil {
