@@ -100,7 +100,7 @@ func OptimizedGetSalesSensitive(c *fiber.Ctx) error {
         `
         SELECT
             s.sales_order_number AS 'SalesOrderNumber',
-			i.inventory_id AS 'ProductID',
+            i.inventory_id AS 'ProductID',
             i.item_name AS 'ProductName',
             s.quantity AS 'Quantity',
             s.sent_quantity AS 'SentQuantity',
@@ -140,12 +140,11 @@ func OptimizedGetSalesSensitive(c *fiber.Ctx) error {
 
     for salesRows.Next() {
         var (
-            salesModel    models.OptimizedGetSaleSensitive
+            salesModel     models.OptimizedGetSaleSensitive
             salesItemModel models.OptimizedGetSalesProduct
             customerModel  models.GetCustomerSensitive
         )
 
-        // Scan each row into product, sale, and customer fields
         err := salesRows.Scan(
             &salesModel.SalesOrderNumber,
             &salesItemModel.ProductID,
@@ -182,6 +181,12 @@ func OptimizedGetSalesSensitive(c *fiber.Ctx) error {
         if existingSale, exists := salesOrdersMap[salesModel.SalesOrderNumber]; exists {
             // If the sales order exists, just append the product to the list
             existingSale.Products = append(existingSale.Products, salesItemModel)
+
+            // Prioritize Delivered Partially
+            if salesModel.DeliveryStatus == "Delivered Partially" && existingSale.DeliveryStatus != "Delivered Partially" {
+                existingSale.DeliveryStatus = "Delivered Partially"
+            }
+
             salesOrdersMap[salesModel.SalesOrderNumber] = existingSale
         } else {
             // If the sales order doesn't exist, create a new one and append the product
@@ -199,10 +204,6 @@ func OptimizedGetSalesSensitive(c *fiber.Ctx) error {
 
     return c.JSON(salesModels)
 }
-
-
-
-
 
 
 func GetSales(c *fiber.Ctx) error {
@@ -318,6 +319,9 @@ func EditSales(c *fiber.Ctx) error {
 		}
 	})
 
+	// debug
+	// return c.JSON(parsedForm)
+
 	// transaction
 	tx, err := database.DB.Begin()
 	if err != nil {
@@ -331,19 +335,6 @@ func EditSales(c *fiber.Ctx) error {
 	}
 
 	numProductIDs := len(parsedForm["product-id"])
-	numQuantities := len(parsedForm["quantity"])
-	numSentQuantities := len(parsedForm["sent-quantity"])
-	numSalePrices := len(parsedForm["sale_price"])
-
-	if numProductIDs == 0 {
-		return c.Status(400).SendString("No product IDs provided.")
-	}
-	if numQuantities != numProductIDs {
-	}
-	if numSentQuantities != numProductIDs {
-	}
-	if numSalePrices != numProductIDs {
-	}
 
 	var delivery_status string
 
@@ -383,7 +374,7 @@ func EditSales(c *fiber.Ctx) error {
 
 	for i := 0; i < numProductIDs; i++ {
 		valueStrings = append(valueStrings, "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-		valueArgs = append(valueArgs, salesOrderID, parsedForm["product-id"][i], parsedForm["quantity"][i], parsedForm["sent-quantity"][i], parsedForm["sale_price"][i], parsedForm["total_tax"][i], parsedForm["customer_id"][i], parsedForm["sales_channel"][i], paymentMethod, paymentStatus, delivery_status)
+		valueArgs = append(valueArgs, salesOrderID, parsedForm["product-id"][i], parsedForm["quantity"][i], parsedForm["sent-quantity"][i], parsedForm["sale_price"][i], parsedForm["total_tax"][0], parsedForm["customer_id"][0], parsedForm["sales_channel"][0], paymentMethod, paymentStatus, delivery_status)
 	}
 
 	query += strings.Join(valueStrings, ", ")

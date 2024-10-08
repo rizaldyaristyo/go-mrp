@@ -128,7 +128,7 @@ VALUES
 ('Bottle Cap', 1, 'CAP001', 'CAP-A', 'Raw Material', FALSE, TRUE, TRUE, 10.00, NULL, 'IDR', 1000, 200),
 ('Plastic Bottle', 1, 'BOTT001', 'BOTT-P', 'Raw Material', FALSE, TRUE, TRUE, 50.00, NULL, 'IDR', 500, 100),
 ('Mineral Water', 2, 'MW001', 'WATER-1L', 'Product', TRUE, FALSE, TRUE, 200.00, 220.00, 'IDR', 300, 50),
-('Packaging Box', 2, 'BOX001', NULL, 'Consumable', FALSE, TRUE, FALSE, 100.00, NULL, 'IDR', 100, 20);
+('Packaging Box', 2, 'BOX001', NULL, 'Consumable', TRUE, TRUE, FALSE, 100.00, NULL, 'IDR', 100, 20);
 
 INSERT INTO manufacturing_orders (manufacture_order_number, product_id, quantity, status)
 VALUES
@@ -151,15 +151,10 @@ VALUES
 
 INSERT INTO sales (sales_order_number, item_id, quantity, sent_quantity, sale_price_per_unit, tax_percent, customer_id, sales_channel, payment_method, payment_status, delivery_status, canceled, payment_date, delivery_date)
 VALUES
-('SO001', 3, 50, 0, 300.00, 10.00, 1, 'Online', 'Credit Card', 'Pending', 'Delivered', FALSE, NULL, NULL),
-('SO002', 3, 30, 30, 300.00, 10.00, 2, 'In-Store', 'Cash', 'Paid', 'Delivered', FALSE, '2024-09-02 15:30:00', '2024-09-02 15:30:00'),
-('SO004', 2, 10, 0, 50.00, 10.00, 3, 'Online', 'Credit Card', 'Pending', 'Delivered', FALSE, NULL, NULL),
+('SO001', 3, 50, 0, 300.00, 10.00, 1, 'Online', 'Credit Card', 'Pending', 'Pending', FALSE, NULL, NULL),
+('SO002', 3, 30, 28, 300.00, 10.00, 2, 'In-Store', 'Cash', 'Paid', 'Delivered Partially', FALSE, '2024-09-02 15:30:00', '2024-09-02 15:30:00'),
 ('SO005', 4, 5, 5, 100.00, 10.00, 2, 'In-Store', 'Cash', 'Paid', 'Delivered', FALSE, '2024-09-03 13:45:00', '2024-09-03 14:00:00'),
-('SO006', 1, 100, 0, 10.00, 10.00, 1, 'Online', 'Credit Card', 'Pending', 'Delivered', TRUE, NULL, NULL),
-('SO001', 2, 50, 0, 300.00, 10.00, 1, 'Online', 'Credit Card', 'Pending', 'Delivered', FALSE, NULL, NULL),
-('SO002', 2, 30, 30, 300.00, 10.00, 2, 'In-Store', 'Cash', 'Paid', 'Delivered', FALSE, '2024-09-02 15:30:00', '2024-09-02 15:30:00'),
-('SO004', 1, 10, 0, 50.00, 10.00, 3, 'Online', 'Credit Card', 'Pending', 'Delivered', FALSE, NULL, NULL),
-('SO005', 3, 5, 5, 100.00, 10.00, 2, 'In-Store', 'Cash', 'Paid', 'Delivered', FALSE, '2024-09-03 13:45:00', '2024-09-03 14:00:00'),
+('SO005', 3, 5, 3, 100.00, 10.00, 2, 'In-Store', 'Cash', 'Paid', 'Delivered Partially', FALSE, '2024-09-03 13:45:00', '2024-09-03 14:00:00'),
 ('SO006', 4, 100, 0, 10.00, 10.00, 1, 'Online', 'Credit Card', 'Pending', 'Delivered', TRUE, NULL, NULL);
 
 INSERT INTO purchases (purchase_order_number, item_id, quantity, purchase_price_per_unit, purchase_status)
